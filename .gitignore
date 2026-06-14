@@ -1,0 +1,35 @@
+# Node modules
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Database files
+simgec.db
+*.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor directories
+.vscode/
+.idea/
+
+# Temporary or generated files
+*.tmp
+*.temp
+~$*
+
+# Archive and generated UI packaging
+admin-ui-changes/
+admin-ui-changes.zip
