@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMGEC Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #000; color: #b8ff6c; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: linear-gradient(90deg, #d60000 0%, #d60000 40%, #000 40%, #000 100%); border-bottom: 1px solid #00ff66; }
+    .flag { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+    .flag-icon { font-size: 1.5rem; }
+    .nav-container { display: flex; gap: 12px; align-items: center; }
+    .nav-btn { background: transparent; border: 1px solid #00ff66; color: #00ff66; padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+    .nav-btn:hover { background: #00ff66; color: #000; }
+    .nav-btn.active { background: #00ff66; color: #000; }
+    .logout-btn { background: #d60000; border: 1px solid #d60000; color: white; }
+    .logout-btn:hover { background: #b50000; }
+    header { padding: 24px 24px 12px; }
+    h1 { color: #b8ff6c; text-shadow: 0 0 24px rgba(184,255,108,0.5); }
+    main { padding: 16px 24px 32px; }
+    .card { background: rgba(0,0,0,0.8); border: 1px solid #00ff66; border-radius: 8px; box-shadow: 0 0 30px rgba(0,255,102,0.2); margin-bottom: 16px; padding: 20px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .stat { background: rgba(0,255,102,0.1); border: 1px solid #00ff66; padding: 16px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 2.5rem; font-weight: bold; color: #00ff66; }
+    .stat-label { color: #8fff88; margin-top: 8px; }
+    .table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    .table th, .table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(0,255,102,0.2); }
+    .table th { color: #d4ff9e; background: rgba(0,255,102,0.05); }
+    .table td { color: #f5f9df; }
+    .chart-container { position: relative; height: 300px; margin-top: 16px; }
+    .hidden { display: none !important; }
+    .action-btn { background: #00ff66; color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+    .action-btn:hover { background: #9aff92; }
+    .danger-btn { background: #ff6b6b; }
+    .danger-btn:hover { background: #ff5252; }
+    .form-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 16px; }
+    .form-grid label { display: block; margin-bottom: 6px; color: #d4ff9e; }
+    .form-grid input, .form-grid select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #00ff66; background: rgba(0,0,0,0.75); color: #f5f9df; }
+    .form-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .primary-btn { background: #00ff66; color: #000; padding: 10px 14px; border: none; border-radius: 8px; cursor: pointer; }
+    .primary-btn:hover { background: #9aff92; }
+    .note { color: #8fff88; }
+    /* Responsive controls for sorting and pagination */
+    .controls-row { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+    .controls-row .controls-left { flex:1; display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+    .controls-row label { margin-right:6px; color:#d4ff9e; font-weight:600; }
+    #paginationControls { display:flex; gap:8px; align-items:center; }
+    #pageInfo { color: #d4ff9e; font-weight:600; }
+    .controls-row select, .controls-row input { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .action-btn, .primary-btn { transition: transform 120ms ease, box-shadow 120ms ease; }
+    .action-btn:active, .primary-btn:active { transform: translateY(1px); }
+    #prevPage::before { content: '←'; margin-right:6px; }
+    #nextPage::after { content: '→'; margin-left:6px; }
+    @media (max-width:720px) {
+      .controls-row .controls-left { flex-basis:100%; }
+      #paginationControls { flex-basis:100%; justify-content:center; margin-top:8px; }
+      .controls-row select, .controls-row input { min-width:140px; }
+    }
+</head>
+<body>
+  <div class="topbar">
+    <div class="flag"><span class="flag-icon">🇦🇴</span><span>SIMGEC Admin</span></div>
+    <div class="nav-container">
+      <button class="nav-btn active" id="dashboardTab">Dashboard</button>
+      <button class="nav-btn" id="usersTab">Utilizadores</button>
+      <button class="nav-btn" id="schoolsTab">Escolas</button>
+      <button class="nav-btn" id="auditTab">Auditoria</button>
+      <a class="nav-btn" href="/chat" style="text-decoration: none; cursor: pointer;">💬 Chat</a>
+      <button class="logout-btn nav-btn" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <header>
+    <h1>Painel de Administração</h1>
+  </header>
+
+  <main>
+    <!-- Dashboard Tab -->
+    <div id="dashboardContent" class="content-section">
+      <div class="grid">
+        <div class="stat">
+          <div class="stat-value" id="totalUsers">0</div>
+          <div class="stat-label">Utilizadores</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="totalAlunos">0</div>
+          <div class="stat-label">Total de Alunos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="totalSchools">0</div>
+          <div class="stat-label">Total de Escolas</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="totalClasses">0</div>
+          <div class="stat-label">Turmas Ativas</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="avgAge">0</div>
+          <div class="stat-label">Idade Média</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Distribuição de Alunos por Turma</h2>
+        <div class="chart-container">
+          <canvas id="classeChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Distribuição de Idade</h2>
+        <div class="chart-container">
+          <canvas id="ageChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Estatísticas Gerais</h2>
+        <table class="table">
+          <thead>
+            <tr><th>Métrica</th><th>Valor</th></tr>
+          </thead>
+          <tbody id="statsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="usersContent" class="content-section hidden">
+      <div class="card">
+        <h2>Gestão de Utilizadores</h2>
+        <form id="createUserForm" class="form-grid">
+          <div>
+            <label for="userEmail">Email</label>
+            <input type="email" id="userEmail" required />
+          </div>
+          <div>
+            <label for="userPassword">Senha</label>
+            <input type="password" id="userPassword" required />
+          </div>
+          <div>
+            <label for="userRole">Função</label>
+            <select id="userRole" required>
+              <option value="director">Director</option>
+              <option value="operator">Operador</option>
+            </select>
+          </div>
+          <div>
+            <label for="userSchool">Escola</label>
+            <input type="text" id="userSchool" required />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-btn">Criar Utilizador</button>
+            <span id="createUserMessage" class="note"></span>
+          </div>
+        </form>
+        <table class="table">
+          <thead>
+            <tr><th>ID</th><th>Email</th><th>Função</th><th>Escola</th><th>Criação</th><th>Ação</th></tr>
+          </thead>
+          <tbody id="usersTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Schools Tab -->
+    <div id="schoolsContent" class="content-section hidden">
+      <div class="card">
+        <h2>Gestão de Escolas</h2>
+        <form id="createSchoolForm" class="form-grid">
+          <input type="hidden" id="schoolId" />
+          <div>
+            <label for="schoolCodigo">Código da Escola</label>
+            <input type="text" id="schoolCodigo" required />
+          </div>
+          <div>
+            <label for="schoolNome">Nome da Escola</label>
+            <input type="text" id="schoolNome" required />
+          </div>
+          <div>
+            <label for="schoolDiretor">Diretor</label>
+            <input type="text" id="schoolDiretor" />
+          </div>
+          <div>
+            <label for="schoolMunicipio">Município</label>
+            <input type="text" id="schoolMunicipio" />
+          </div>
+          <div>
+            <label for="schoolComuna">Comuna</label>
+            <input type="text" id="schoolComuna" />
+          </div>
+          <div>
+            <label for="schoolBairro">Bairro</label>
+            <input type="text" id="schoolBairro" />
+          </div>
+          <div>
+            <label for="schoolTelefone">Telefone</label>
+            <input type="text" id="schoolTelefone" />
+          </div>
+          <div>
+            <label for="schoolEmail">Email</label>
+            <input type="email" id="schoolEmail" />
+          </div>
+          <div>
+            <label for="schoolNivelEnsino">Nível de Ensino</label>
+            <input type="text" id="schoolNivelEnsino" />
+          </div>
+          <div>
+            <label for="schoolNumSalas">Número de Salas</label>
+            <input type="number" id="schoolNumSalas" min="0" />
+          </div>
+          <div>
+            <label for="schoolNumAlunos">Número de Alunos</label>
+            <input type="number" id="schoolNumAlunos" min="0" />
+          </div>
+          <div>
+            <label for="schoolNumProfessores">Número de Professores</label>
+            <input type="number" id="schoolNumProfessores" min="0" />
+          </div>
+          <div>
+            <label for="schoolEstado">Estado</label>
+            <input type="text" id="schoolEstado" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="primary-btn" id="saveSchoolButton">Criar Escola</button>
+            <button type="button" class="action-btn danger-btn" id="cancelSchoolEdit">Cancelar</button>
+            <span id="createSchoolMessage" class="note"></span>
+          </div>
+        </form>
+        <!-- Filters -->
+        <div class="card" style="margin-top:12px;">
+          <h3>Filtros</h3>
+          <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+            <div>
+              <label for="filterQ">Busca</label>
+              <input type="text" id="filterQ" placeholder="Código, nome, município..." />
+            </div>
+            <div>
+              <label for="filterProvincia">Província</label>
+              <input type="text" id="filterProvincia" />
+            </div>
+            <div>
+              <label for="filterMunicipio">Município</label>
+              <input type="text" id="filterMunicipio" />
+            </div>
+            <div>
+              <label for="filterNivel">Nível de Ensino</label>
+              <input type="text" id="filterNivel" />
+            </div>
+            <div>
+              <label for="filterEstado">Estado</label>
+              <input type="text" id="filterEstado" />
+            </div>
+            <div>
+              <label for="filterNumSalasMin">Nº Salas Min</label>
+              <input type="number" id="filterNumSalasMin" min="0" />
+            </div>
+            <div>
+              <label for="filterNumSalasMax">Nº Salas Max</label>
+              <input type="number" id="filterNumSalasMax" min="0" />
+            </div>
+            <div style="display:flex; align-items:end; gap:8px;">
+              <button class="primary-btn" id="applyFilters">Filtrar</button>
+              <button class="action-btn" id="clearFilters" type="button">Limpar</button>
+            </div>
+          </div>
+        </div>
+        <!-- Sort & Pagination controls -->
+        <div class="card controls-row" style="margin-top:12px;">
+          <div class="controls-left">
+            <label for="sortBy" style="color:#d4ff9e;">Ordenar por</label>
+            <select id="sortBy">
+              <option value="nome">Nome</option>
+              <option value="codigo">Código</option>
+              <option value="provincia">Província</option>
+              <option value="municipio">Município</option>
+              <option value="created_at">Data</option>
+            </select>
+            <select id="sortOrder">
+              <option value="ASC">ASC</option>
+              <option value="DESC">DESC</option>
+            </select>
+            <label for="pageLimit" style="color:#d4ff9e;">Registos por página</label>
+            <select id="pageLimit">
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50" selected>50</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+          <div id="paginationControls">
+            <button class="action-btn" id="prevPage">Anterior</button>
+            <span id="pageInfo"></span>
+            <button class="action-btn" id="nextPage">Próxima</button>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr><th>ID</th><th>Código</th><th>Nome</th><th>Município</th><th>Comuna</th><th>Ação</th></tr>
+          </thead>
+          <tbody id="schoolsTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Audit Tab -->
+    <div id="auditContent" class="content-section hidden">
+      <div class="card">
+        <h2>Registos de Atividade</h2>
+        <table class="table">
+          <thead>
+            <tr><th>ID</th><th>Email do Utilizador</th><th>Ação</th><th>Recurso</th><th>Timestamp</th></tr>
+          </thead>
+          <tbody id="auditTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('simgc_token');
+    const userRole = localStorage.getItem('simgc_role');
+
+    if (!token || userRole !== 'admin') {
+      window.location.href = '/dashboard';
+    }
+
+    let classeChart, ageChart;
+    let editingSchoolId = null;
+
+    async function loadDashboard() {
+      try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const [resAnalytics, resUsers, resAlunos, resEscolas] = await Promise.all([
+          fetch('/analytics/summary', { headers }),
+          fetch('/admin-api/users', { headers }),
+          fetch('/alunos', { headers }),
+          fetch('/escolas', { headers })
+        ]);
+
+        if (!resAnalytics.ok || !resUsers.ok || !resAlunos.ok || !resEscolas.ok) {
+          console.error('Erro ao carregar dados');
+          return;
+        }
+
+        const analytics = await resAnalytics.json();
+        const users = await resUsers.json();
+        const alunos = await resAlunos.json();
+        const escolas = await resEscolas.json();
+
+        // Update stats
+        document.getElementById('totalUsers').textContent = users.length;
+        document.getElementById('totalAlunos').textContent = analytics.totalAlunos;
+        document.getElementById('totalClasses').textContent = analytics.alunosPorTurma ? analytics.alunosPorTurma.length : 0;
+        document.getElementById('totalSchools').textContent = escolas.length;
+
+        const avgAge = alunos.length > 0 
+          ? (alunos.reduce((sum, a) => sum + a.idade, 0) / alunos.length).toFixed(1)
+          : 0;
+        document.getElementById('avgAge').textContent = avgAge;
+
+        // Charts
+        renderClasseChart(analytics.alunosPorTurma || []);
+        renderAgeChart(alunos);
+
+        // Stats table
+        const statsTable = document.getElementById('statsTable');
+        statsTable.innerHTML = `
+          <tr><td>Alunos Totais</td><td>${analytics.totalAlunos}</td></tr>
+          <tr><td>Utilizadores</td><td>${users.length}</td></tr>
+          <tr><td>Idade Mínima</td><td>${alunos.length > 0 ? Math.min(...alunos.map(a => a.idade)) : 'N/A'}</td></tr>
+          <tr><td>Idade Máxima</td><td>${alunos.length > 0 ? Math.max(...alunos.map(a => a.idade)) : 'N/A'}</td></tr>
+        `;
+
+        loadUsers(users);
+      } catch (err) {
+        console.error('Erro ao carregar dashboard:', err);
+      }
+    }
+
+    function renderClasseChart(classes) {
+      const ctx = document.getElementById('classeChart').getContext('2d');
+      if (classeChart) classeChart.destroy();
+      classeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: classes.map(c => c.turma),
+          datasets: [{
+            label: 'Alunos por Turma',
+            data: classes.map(c => c.total),
+            backgroundColor: '#00ff66',
+            borderColor: '#b8ff6c',
+            borderWidth: 2
+          }]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#b8ff6c' } } },
+          scales: { y: { ticks: { color: '#8fff88' }, grid: { color: 'rgba(0,255,102,0.1)' } }, x: { ticks: { color: '#8fff88' }, grid: { color: 'rgba(0,255,102,0.1)' } } }
+        }
+      });
+    }
+
+    function renderAgeChart(alunos) {
+      const ageGroups = { '5-10': 0, '11-14': 0, '15-18': 0, '18+': 0 };
+      alunos.forEach(a => {
+        if (a.idade <= 10) ageGroups['5-10']++;
+        else if (a.idade <= 14) ageGroups['11-14']++;
+        else if (a.idade <= 18) ageGroups['15-18']++;
+        else ageGroups['18+']++;
+      });
+
+      const ctx = document.getElementById('ageChart').getContext('2d');
+      if (ageChart) ageChart.destroy();
+      ageChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(ageGroups),
+          datasets: [{
+            data: Object.values(ageGroups),
+            backgroundColor: ['#00ff66', '#b8ff6c', '#92ff74', '#6fdd5c']
+          }]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#b8ff6c' } } }
+        }
+      });
+    }
+
+    function loadUsers(users) {
+      const usersTable = document.getElementById('usersTable');
+      usersTable.innerHTML = users.map(u => `
+        <tr>
+          <td>${u.id}</td>
+          <td>${u.email}</td>
+          <td><span class="badge">${u.role}</span></td>
+          <td>${u.escola || ''}</td>
+          <td>${new Date(u.created_at).toLocaleDateString('pt-PT')}</td>
+          <td>
+            <button class="action-btn" onclick="editUser(${u.id})">Editar</button>
+            ${u.role !== 'admin' ? `<button class="action-btn danger-btn" onclick="deleteUser(${u.id})">Apagar</button>` : ''}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function loadSchools(schools) {
+      const schoolsTable = document.getElementById('schoolsTable');
+      schoolsTable.innerHTML = schools.map(s => `
+        <tr data-id="${s.id}" data-codigo="${s.codigo || ''}" data-nome="${s.nome || ''}" data-diretor="${s.diretor || ''}" data-municipio="${s.municipio || ''}" data-comuna="${s.comuna || ''}" data-bairro="${s.bairro || ''}" data-telefone="${s.telefone || ''}" data-email="${s.email || ''}" data-nivel-ensino="${s.nivel_ensino || ''}" data-num-salas="${s.num_salas || ''}" data-num-alunos="${s.num_alunos || ''}" data-num-professores="${s.num_professores || ''}" data-estado="${s.estado || ''}">
+          <td>${s.id}</td>
+          <td>${s.codigo}</td>
+          <td>${s.nome}</td>
+          <td>${s.municipio || ''}</td>
+          <td>${s.comuna || ''}</td>
+          <td>
+            <button class="action-btn" onclick="editSchool(${s.id})">Editar</button>
+            <button class="action-btn danger-btn" onclick="deleteSchool(${s.id})">Apagar</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentLimit = 50;
+    let currentSortBy = 'nome';
+    let currentSortOrder = 'ASC';
+
+    async function refreshSchools(queryString, page = 1) {
+      currentPage = page;
+      try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        // combine queryString with pagination and sort
+        const params = new URLSearchParams(queryString || '');
+        params.set('page', String(currentPage));
+        params.set('limit', String(currentLimit));
+        params.set('sortBy', currentSortBy);
+        params.set('sortOrder', currentSortOrder);
+        const url = '/escolas?' + params.toString();
+        const res = await fetch(url, { headers });
+        if (!res.ok) {
+          throw new Error('Erro ao carregar escolas');
+        }
+        const payload = await res.json();
+        // endpoint returns { data, pagination }
+        const escolas = Array.isArray(payload) ? payload : (payload.data || []);
+        loadSchools(escolas);
+        // update pagination info
+        const pag = payload.pagination || { page: currentPage, limit: currentLimit, total: escolas.length, totalPages: 1 };
+        totalPages = pag.totalPages || 1;
+        document.getElementById('pageInfo').textContent = `Página ${pag.page} / ${totalPages} — ${pag.total} registos`;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function buildFilterQuery() {
+      const q = document.getElementById('filterQ').value.trim();
+      const provincia = document.getElementById('filterProvincia').value.trim();
+      const municipio = document.getElementById('filterMunicipio').value.trim();
+      const nivel = document.getElementById('filterNivel').value.trim();
+      const estado = document.getElementById('filterEstado').value.trim();
+      const numSalasMin = document.getElementById('filterNumSalasMin').value;
+      const numSalasMax = document.getElementById('filterNumSalasMax').value;
+
+      const params = new URLSearchParams();
+      if (q) params.append('q', q);
+      if (provincia) params.append('provincia', provincia);
+      if (municipio) params.append('municipio', municipio);
+      if (nivel) params.append('nivel_ensino', nivel);
+      if (estado) params.append('estado', estado);
+      if (numSalasMin) params.append('num_salas_min', numSalasMin);
+      if (numSalasMax) params.append('num_salas_max', numSalasMax);
+      return params.toString();
+    }
+
+    document.getElementById('applyFilters').addEventListener('click', (e) => {
+      e.preventDefault();
+      currentPage = 1;
+      const qs = buildFilterQuery();
+      refreshSchools(qs, currentPage);
+    });
+
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      ['filterQ','filterProvincia','filterMunicipio','filterNivel','filterEstado','filterNumSalasMin','filterNumSalasMax'].forEach(id => document.getElementById(id).value = '');
+      currentPage = 1;
+      refreshSchools('', currentPage);
+    });
+
+    // Sort & pagination handlers
+    document.getElementById('sortBy').addEventListener('change', (e) => {
+      currentSortBy = e.target.value;
+      refreshSchools(buildFilterQuery(), 1);
+    });
+    document.getElementById('sortOrder').addEventListener('change', (e) => {
+      currentSortOrder = e.target.value;
+      refreshSchools(buildFilterQuery(), 1);
+    });
+    document.getElementById('pageLimit').addEventListener('change', (e) => {
+      currentLimit = Number(e.target.value) || 50;
+      refreshSchools(buildFilterQuery(), 1);
+    });
+    document.getElementById('prevPage').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage -= 1;
+        refreshSchools(buildFilterQuery(), currentPage);
+      }
+    });
+    document.getElementById('nextPage').addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage += 1;
+        refreshSchools(buildFilterQuery(), currentPage);
+      }
+    });
+
+    document.getElementById('createUserForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.getElementById('userEmail').value.trim();
+      const password = document.getElementById('userPassword').value;
+      const role = document.getElementById('userRole').value;
+      const escola = document.getElementById('userSchool').value.trim();
+      const messageEl = document.getElementById('createUserMessage');
+
+      messageEl.textContent = '';
+
+      try {
+        const response = await fetch('/admin-api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ email, password, role, escola })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          messageEl.textContent = data.message || 'Erro ao criar utilizador';
+          messageEl.style.color = '#ff6b6b';
+          return;
+        }
+
+        messageEl.textContent = 'Utilizador criado com sucesso';
+        messageEl.style.color = '#00ff66';
+        document.getElementById('createUserForm').reset();
+        loadDashboard();
+      } catch (err) {
+        messageEl.textContent = 'Erro ao criar utilizador';
+        messageEl.style.color = '#ff6b6b';
+      }
+    });
+
+    document.getElementById('createSchoolForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const codigo = document.getElementById('schoolCodigo').value.trim();
+      const nome = document.getElementById('schoolNome').value.trim();
+      const diretor = document.getElementById('schoolDiretor').value.trim();
+      const municipio = document.getElementById('schoolMunicipio').value.trim();
+      const comuna = document.getElementById('schoolComuna').value.trim();
+      const bairro = document.getElementById('schoolBairro').value.trim();
+      const telefone = document.getElementById('schoolTelefone').value.trim();
+      const email = document.getElementById('schoolEmail').value.trim();
+      const nivel_ensino = document.getElementById('schoolNivelEnsino').value.trim();
+      const num_salas = parseInt(document.getElementById('schoolNumSalas').value, 10) || null;
+      const num_alunos = parseInt(document.getElementById('schoolNumAlunos').value, 10) || null;
+      const num_professores = parseInt(document.getElementById('schoolNumProfessores').value, 10) || null;
+      const estado = document.getElementById('schoolEstado').value.trim();
+      const messageEl = document.getElementById('createSchoolMessage');
+
+      messageEl.textContent = '';
+      const method = editingSchoolId ? 'PUT' : 'POST';
+      const url = editingSchoolId ? `/escolas/${editingSchoolId}` : '/escolas';
+
+      try {
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            codigo,
+            nome,
+            diretor,
+            municipio,
+            comuna,
+            bairro,
+            telefone,
+            email,
+            nivel_ensino,
+            num_salas,
+            num_alunos,
+            num_professores,
+            estado
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          messageEl.textContent = data.message || (editingSchoolId ? 'Erro ao atualizar escola' : 'Erro ao criar escola');
+          messageEl.style.color = '#ff6b6b';
+          return;
+        }
+
+        messageEl.textContent = editingSchoolId ? 'Escola atualizada com sucesso' : 'Escola criada com sucesso';
+        messageEl.style.color = '#00ff66';
+        resetSchoolForm();
+        refreshSchools();
+      } catch (err) {
+        messageEl.textContent = editingSchoolId ? 'Erro ao atualizar escola' : 'Erro ao criar escola';
+        messageEl.style.color = '#ff6b6b';
+      }
+    });
+
+    document.getElementById('cancelSchoolEdit').addEventListener('click', resetSchoolForm);
+
+    async function loadAudit() {
+      try {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const res = await fetch('/admin-api/audit', { headers });
+        if (!res.ok) return;
+        
+        const audits = await res.json();
+        const auditTable = document.getElementById('auditTable');
+        auditTable.innerHTML = audits.slice(0, 50).map(a => `
+          <tr>
+            <td>${a.id}</td>
+            <td>${a.user_email}</td>
+            <td>${a.action}</td>
+            <td>${a.resource}</td>
+            <td>${new Date(a.timestamp).toLocaleString('pt-PT')}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Erro ao carregar auditoria:', err);
+      }
+    }
+
+    function editUser(id) {
+      alert(`Editar utilizador ${id} (funcionalidade em desenvolvimento)`);
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Tem a certeza que deseja apagar este utilizador?')) return;
+      try {
+        const response = await fetch(`/admin-api/users/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          alert(data.message || 'Erro ao eliminar utilizador');
+          return;
+        }
+        loadDashboard();
+      } catch (err) {
+        console.error('Erro ao eliminar utilizador:', err);
+        alert('Erro ao eliminar utilizador');
+      }
+    }
+
+    function editSchool(id) {
+      const row = document.querySelector(`#schoolsTable tr[data-id="${id}"]`);
+      if (!row) {
+        alert('Linha da escola não encontrada');
+        return;
+      }
+
+      editingSchoolId = id;
+      document.getElementById('schoolId').value = id;
+      document.getElementById('schoolCodigo').value = row.dataset.codigo || '';
+      document.getElementById('schoolNome').value = row.dataset.nome || '';
+      document.getElementById('schoolDiretor').value = row.dataset.diretor || '';
+      document.getElementById('schoolMunicipio').value = row.dataset.municipio || '';
+      document.getElementById('schoolComuna').value = row.dataset.comuna || '';
+      document.getElementById('schoolBairro').value = row.dataset.bairro || '';
+      document.getElementById('schoolTelefone').value = row.dataset.telefone || '';
+      document.getElementById('schoolEmail').value = row.dataset.email || '';
+      document.getElementById('schoolNivelEnsino').value = row.dataset.nivelEnsino || '';
+      document.getElementById('schoolNumSalas').value = row.dataset.numSalas || '';
+      document.getElementById('schoolNumAlunos').value = row.dataset.numAlunos || '';
+      document.getElementById('schoolNumProfessores').value = row.dataset.numProfessores || '';
+      document.getElementById('schoolEstado').value = row.dataset.estado || '';
+      document.getElementById('saveSchoolButton').textContent = 'Atualizar Escola';
+    }
+
+    async function deleteSchool(id) {
+      if (!confirm('Tem a certeza que deseja apagar esta escola?')) return;
+      try {
+        const response = await fetch(`/escolas/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          alert(data.message || 'Erro ao eliminar escola');
+          return;
+        }
+        refreshSchools();
+      } catch (err) {
+        console.error('Erro ao eliminar escola:', err);
+        alert('Erro ao eliminar escola');
+      }
+    }
+
+    // Tab switching
+    document.getElementById('dashboardTab').addEventListener('click', () => {
+      document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById('dashboardContent').classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('dashboardTab').classList.add('active');
+      loadDashboard();
+    });
+
+    document.getElementById('usersTab').addEventListener('click', () => {
+      document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById('usersContent').classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('usersTab').classList.add('active');
+      loadDashboard();
+    });
+
+    document.getElementById('schoolsTab').addEventListener('click', () => {
+      document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById('schoolsContent').classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('schoolsTab').classList.add('active');
+      refreshSchools();
+    });
+
+    document.getElementById('auditTab').addEventListener('click', () => {
+      document.querySelectorAll('.content-section').forEach(el => el.classList.add('hidden'));
+      document.getElementById('auditContent').classList.remove('hidden');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('auditTab').classList.add('active');
+      loadAudit();
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('simgc_token');
+      localStorage.removeItem('simgc_role');
+      window.location.href = '/';
+    });
+
+    // Initial load
+    loadDashboard();
+  </script>
+</body>
+</html>
