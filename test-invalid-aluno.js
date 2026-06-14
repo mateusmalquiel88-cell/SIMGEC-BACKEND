@@ -1,0 +1,51 @@
+const cp = require('child_process');
+const http = require('http');
+const path = require('path');
+
+const server = cp.spawn('node', ['server.js'], {
+  cwd: path.resolve(__dirname),
+  stdio: ['ignore', 'pipe', 'pipe']
+});
+
+server.stdout.on('data', (data) => process.stderr.write(data));
+server.stderr.on('data', (data) => process.stderr.write(data));
+
+const req = (path, method, body) => new Promise((resolve, reject) => {
+  const opts = {
+    hostname: 'localhost',
+    port: 3000,
+    path,
+    method,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  const r = http.request(opts, (res) => {
+    let data = '';
+    res.on('data', (chunk) => data += chunk);
+    res.on('end', () => {
+      try {
+        resolve({ status: res.statusCode, body: JSON.parse(data) });
+      } catch (err) {
+        resolve({ status: res.statusCode, body: data });
+      }
+    });
+  });
+
+  r.on('error', reject);
+  if (body) r.write(JSON.stringify(body));
+  r.end();
+});
+
+setTimeout(async () => {
+  try {
+    const post = await req('/alunos', 'POST', { nome: 'A', idade: 2, turma: '' });
+    console.log('RESULT', JSON.stringify(post, null, 2));
+  } catch (err) {
+    console.error('ERROR', err);
+  } finally {
+    server.kill();
+    process.exit(0);
+  }
+}, 2000);

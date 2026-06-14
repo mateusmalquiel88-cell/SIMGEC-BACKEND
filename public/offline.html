@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline - SIMGEC</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #000 0%, #1a1a1a 100%);
+      color: #b8ff6c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      text-align: center;
+      background: rgba(0,0,0,0.8);
+      border: 2px solid #00ff66;
+      border-radius: 12px;
+      padding: 40px 30px;
+      box-shadow: 0 0 30px rgba(0,255,102,0.2);
+    }
+    .icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #b8ff6c;
+      margin-bottom: 15px;
+      font-size: 28px;
+      text-shadow: 0 0 10px rgba(184,255,108,0.5);
+    }
+    p {
+      color: #8fff88;
+      line-height: 1.6;
+      margin-bottom: 25px;
+      font-size: 16px;
+    }
+    .status {
+      padding: 15px;
+      background: rgba(255,107,107,0.1);
+      border: 1px solid #ff6b6b;
+      border-radius: 6px;
+      margin-bottom: 20px;
+      color: #ff9999;
+    }
+    .status.online {
+      background: rgba(0,255,102,0.1);
+      border-color: #00ff66;
+      color: #9aff92;
+    }
+    button {
+      background: #00ff66;
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #9aff92;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,255,102,0.3);
+    }
+    button:disabled {
+      background: #666;
+      color: #999;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .info {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(0,255,102,0.2);
+      font-size: 14px;
+      color: #8fff88;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">📶</div>
+    <h1>Sem Conexão</h1>
+    <p>O SIMGEC está funcionando em modo offline. Os dados podem ser limitados.</p>
+    
+    <div class="status" id="connectionStatus">
+      ⏳ Aguardando conexão...
+    </div>
+
+    <button onclick="checkConnection()" id="retryBtn">Tentar Novamente</button>
+    <button onclick="goHome()" style="background: transparent; border: 1px solid #00ff66; color: #00ff66; margin-left: 10px;">Voltar</button>
+
+    <div class="info">
+      <p>💡 Pode continuar a usar SIMGEC mesmo sem internet. Os dados sincronizarão automaticamente quando a conexão voltar.</p>
+    </div>
+  </div>
+
+  <script>
+    function checkConnection() {
+      const btn = document.getElementById('retryBtn');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+
+      navigator.onLine 
+        ? handleOnline() 
+        : setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = 'Tentar Novamente';
+          }, 2000);
+    }
+
+    function handleOnline() {
+      const status = document.getElementById('connectionStatus');
+      status.classList.add('online');
+      status.textContent = '✅ Conexão restaurada!';
+      setTimeout(() => goHome(), 2000);
+    }
+
+    function goHome() {
+      // Tentar voltar para dashboard ou login
+      const token = localStorage.getItem('simgc_token');
+      window.location.href = token ? '/dashboard' : '/';
+    }
+
+    // Monitorizar conexão
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', () => {
+      const status = document.getElementById('connectionStatus');
+      status.classList.remove('online');
+      status.textContent = '❌ Sem conexão à internet';
+    });
+
+    // Verificar estado inicial
+    if (navigator.onLine) {
+      handleOnline();
+    }
+  </script>
+</body>
+</html>

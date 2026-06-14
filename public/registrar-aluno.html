@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMGEC - Registar Aluno</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #000; color: #b8ff6c; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: linear-gradient(90deg, #d60000 0%, #d60000 40%, #000 40%, #000 100%); border-bottom: 1px solid #00ff66; }
+    .flag { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+    .flag-icon { font-size: 1.5rem; }
+    .nav { display: flex; gap: 12px; }
+    .nav-link { color: #00ff66; text-decoration: none; padding: 8px 14px; border: 1px solid #00ff66; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+    .nav-link:hover { background: #00ff66; color: #000; }
+    .container { max-width: 600px; margin: 40px auto; padding: 24px; background: rgba(0, 0, 0, 0.88); border: 1px solid #00ff66; border-radius: 16px; box-shadow: 0 0 40px rgba(0, 255, 102, 0.33); }
+    h1 { color: #b8ff6c; text-shadow: 0 0 16px rgba(184, 255, 108, 0.6); margin-bottom: 24px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-weight: 600; color: #d4ff9e; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #00ff66; background: rgba(0, 0, 0, 0.75); color: #d4ff9e; }
+    input:focus, select:focus { outline: none; box-shadow: 0 0 18px rgba(0, 255, 102, 0.5); border-color: #92ff74; }
+    .button-group { display: flex; gap: 12px; margin-top: 24px; }
+    button { flex: 1; padding: 12px 16px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
+    .submit-btn { background: #00ff66; color: #000; font-weight: bold; }
+    .submit-btn:hover { background: #9aff92; }
+    .cancel-btn { background: transparent; border: 1px solid #00ff66; color: #00ff66; }
+    .cancel-btn:hover { background: #00ff66; color: #000; }
+    .message { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; }
+    .success { background: rgba(0, 255, 102, 0.2); border: 1px solid #00ff66; color: #b8ff6c; }
+    .error { background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; color: #ff9999; }
+    .info { background: rgba(100, 200, 255, 0.2); border: 1px solid #64c8ff; color: #96d4ff; }
+    .form-hint { font-size: 0.9rem; color: #8fff88; margin-top: 4px; }
+    .validation-error { color: #ff6b6b; font-size: 0.9rem; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="flag"><span class="flag-icon">🇦🇴</span><span>SIMGEC - Registar Aluno</span></div>
+    <div class="nav">
+      <a class="nav-link" href="/dashboard">Dashboard</a>
+      <a class="nav-link" href="/chat">💬 Chat</a>
+      <a class="nav-link" onclick="logout()">Logout</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <h1>Registar Novo Aluno</h1>
+    
+    <div id="messageBox"></div>
+
+    <form id="registroForm">
+      <div class="form-group">
+        <label for="nome">Nome Completo *</label>
+        <input type="text" id="nome" name="nome" placeholder="Ex: João Silva" required />
+        <div class="form-hint">Mínimo 3 caracteres</div>
+      </div>
+
+      <div class="form-group">
+        <label for="idade">Idade *</label>
+        <input type="number" id="idade" name="idade" min="5" max="100" placeholder="Ex: 15" required />
+        <div class="form-hint">Entre 5 e 100 anos</div>
+      </div>
+
+      <div class="form-group">
+        <label for="turma">Turma *</label>
+        <select id="turma" name="turma" required>
+          <option value="">-- Selecione uma turma --</option>
+          <option value="7º A">7º A</option>
+          <option value="7º B">7º B</option>
+          <option value="8º A">8º A</option>
+          <option value="8º B">8º B</option>
+          <option value="9º A">9º A</option>
+          <option value="9º B">9º B</option>
+          <option value="10º A">10º A</option>
+          <option value="10º B">10º B</option>
+          <option value="11º A">11º A</option>
+          <option value="11º B">11º B</option>
+          <option value="12º A">12º A</option>
+          <option value="12º B">12º B</option>
+        </select>
+      </div>
+
+      <div class="button-group">
+        <button type="submit" class="submit-btn">Registar Aluno</button>
+        <button type="button" class="cancel-btn" onclick="window.history.back()">Cancelar</button>
+      </div>
+    </form>
+
+    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(0,255,102,0.2);">
+      <p style="color: #8fff88; font-size: 0.9rem;">
+        <strong>Nota:</strong> Todos os campos são obrigatórios. Os dados serão armazenados de forma segura e apenas acessíveis a utilizadores autorizados.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('simgc_token');
+    const userRole = localStorage.getItem('simgc_role');
+
+    if (!token || !['admin', 'operator'].includes(userRole)) {
+      window.location.href = '/dashboard';
+    }
+
+    const form = document.getElementById('registroForm');
+    const messageBox = document.getElementById('messageBox');
+
+    function showMessage(text, type) {
+      messageBox.innerHTML = `<div class="message ${type}">${text}</div>`;
+      if (type === 'success') {
+        setTimeout(() => form.reset(), 2000);
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const nome = document.getElementById('nome').value.trim();
+      const idade = parseInt(document.getElementById('idade').value);
+      const turma = document.getElementById('turma').value.trim();
+
+      // Validação básica
+      if (nome.length < 3) {
+        showMessage('Nome deve ter pelo menos 3 caracteres', 'error');
+        return;
+      }
+
+      if (idade < 5 || idade > 100) {
+        showMessage('Idade deve estar entre 5 e 100 anos', 'error');
+        return;
+      }
+
+      if (!turma) {
+        showMessage('Selecione uma turma válida', 'error');
+        return;
+      }
+
+      try {
+        showMessage('A enviar dados...', 'info');
+
+        const response = await fetch('/alunos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ nome, idade, turma })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showMessage(`Erro: ${data.message}`, 'error');
+          return;
+        }
+
+        showMessage(`Aluno "${nome}" registado com sucesso!`, 'success');
+        form.reset();
+      } catch (err) {
+        showMessage('Erro ao registar aluno. Tente novamente.', 'error');
+        console.error('Erro:', err);
+      }
+    });
+
+    function logout() {
+      if (confirm('Tem a certeza que deseja fazer logout?')) {
+        localStorage.removeItem('simgc_token');
+        localStorage.removeItem('simgc_role');
+        window.location.href = '/';
+      }
+    }
+  </script>
+</body>
+</html>

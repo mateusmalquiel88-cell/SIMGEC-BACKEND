@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d60000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="SIMGEC" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23d60000' width='192' height='192'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='80' font-weight='bold' fill='%23b8ff6c' font-family='Arial'>S</text></svg>" />
+  <title>SIMGEC Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #000000; display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #b8ff6c; }
+    .topbar { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: linear-gradient(90deg, #d60000 0%, #d60000 40%, #000000 40%, #000000 100%); color: white; box-shadow: 0 2px 16px rgba(0,0,0,0.5); }
+    .flag { display: flex; align-items: center; gap: 10px; font-size: 1rem; font-weight: bold; }
+    .flag-icon { font-size: 1.4rem; }
+    .container { width: 100%; max-width: 420px; padding: 24px; background: rgba(0, 0, 0, 0.88); border: 1px solid #00ff66; border-radius: 16px; box-shadow: 0 0 40px rgba(0, 255, 102, 0.33); backdrop-filter: blur(10px); }
+    h1 { margin-top: 0; color: #b8ff6c; text-shadow: 0 0 16px rgba(184, 255, 108, 0.6); }
+    label { display: block; margin-top: 16px; font-weight: 600; color: #d4ff9e; }
+    input { width: 100%; padding: 12px 14px; margin-top: 8px; border-radius: 10px; border: 1px solid #00ff66; background: rgba(0, 0, 0, 0.75); color: #d4ff9e; }
+    input:focus { outline: none; box-shadow: 0 0 18px rgba(0, 255, 102, 0.5); border-color: #92ff74; }
+    button { margin-top: 24px; width: 100%; padding: 14px 16px; border: none; border-radius: 10px; background: #00ff66; color: #000; font-size: 1rem; cursor: pointer; box-shadow: 0 0 16px rgba(0, 255, 102, 0.45); }
+    button:hover { background: #9aff92; }
+    .note { margin-top: 16px; color: #8fff88; font-size: 0.95rem; }
+    .error { margin-top: 16px; color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="flag"><span class="flag-icon">🇦🇴</span> Bandeira de Angola</div>
+    <div>Interface SIMGEC</div>
+  </div>
+  <div class="container">
+    <h1>Entrar no SIMGEC</h1>
+    <form id="loginForm">
+      <label for="email">Email</label>
+      <input type="text" id="email" name="email" value="marotheus.mora" required />
+
+      <label for="password">Senha</label>
+      <input type="password" id="password" name="password" required />
+
+      <button type="submit">Entrar</button>
+      <p class="error" id="errorMessage"></p>
+    </form>
+    <p class="note">Use o administrador padrão ou registre outro utilizador em /auth/register.</p>
+  </div>
+
+  <script>
+    async function checkToken() {
+      const token = localStorage.getItem('simgc_token');
+      if (!token) return false;
+
+      try {
+        const response = await fetch('/auth/verify', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    (async () => {
+      const isValid = await checkToken();
+      if (isValid) {
+        window.location.href = '/dashboard';
+        return;
+      } else {
+        localStorage.removeItem('simgc_token');
+        localStorage.removeItem('simgc_role');
+        document.cookie = 'simgc_token=; path=/; Max-Age=0; SameSite=Lax';
+      }
+    })();
+
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMessage = document.getElementById('errorMessage');
+      errorMessage.textContent = '';
+
+      try {
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          errorMessage.textContent = data.message || 'Falha no login';
+          return;
+        }
+
+        localStorage.setItem('simgc_token', data.token);
+        localStorage.setItem('simgc_role', data.role || 'operator');
+        document.cookie = `simgc_token=${encodeURIComponent(data.token)}; path=/; SameSite=Lax`;
+        window.location.href = '/dashboard';
+      } catch (err) {
+        errorMessage.textContent = 'Erro no login, tente novamente.';
+      }
+    });
+
+    // Registar Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
+        .then((registration) => {
+          console.log('[PWA] Service Worker registado:', registration.scope);
+        })
+        .catch((err) => {
+          console.warn('[PWA] Erro ao registar Service Worker:', err);
+        });
+    }
+
+    // Detectar modo offline
+    window.addEventListener('offline', () => {
+      console.log('[PWA] Offline detectado');
+    });
+
+    window.addEventListener('online', () => {
+      console.log('[PWA] Online restaurado');
+    });
+  </script>
+  <script src="/offline-sync.js"></script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMGEC Chat - Assistente Educacional</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #000; color: #b8ff6c; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: linear-gradient(90deg, #d60000 0%, #d60000 40%, #000 40%, #000 100%); border-bottom: 1px solid #00ff66; }
+    .flag { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+    .flag-icon { font-size: 1.5rem; }
+    .nav-link { background: transparent; border: 1px solid #00ff66; color: #00ff66; padding: 8px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+    .nav-link:hover { background: #00ff66; color: #000; }
+    header { padding: 24px 24px 12px; }
+    h1 { color: #b8ff6c; text-shadow: 0 0 24px rgba(184,255,108,0.5); }
+    main { padding: 16px 24px 32px; display: flex; gap: 16px; height: calc(100vh - 200px); }
+    .chat-container { flex: 1; background: rgba(0,0,0,0.8); border: 1px solid #00ff66; border-radius: 8px; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,255,102,0.2); }
+    .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .message { padding: 12px 14px; border-radius: 8px; max-width: 80%; word-wrap: break-word; }
+    .message.user { align-self: flex-end; background: #00ff66; color: #000; border: 1px solid #b8ff6c; }
+    .message.assistant { align-self: flex-start; background: rgba(0,255,102,0.1); border: 1px solid #00ff66; color: #d4ff9e; }
+    .message.system { align-self: center; color: #8fff88; font-size: 0.9rem; font-style: italic; }
+    .chat-input-area { display: flex; gap: 8px; padding: 16px; border-top: 1px solid #00ff66; }
+    input { flex: 1; padding: 12px 14px; border: 1px solid #00ff66; background: rgba(0,0,0,0.75); color: #d4ff9e; border-radius: 6px; }
+    input:focus { outline: none; box-shadow: 0 0 12px rgba(0,255,102,0.5); border-color: #92ff74; }
+    button { padding: 12px 16px; background: #00ff66; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    button:hover { background: #9aff92; }
+    .clear-btn { background: transparent; border: 1px solid #ff6b6b; color: #ff6b6b; }
+    .clear-btn:hover { background: rgba(255,107,107,0.2); }
+    .loading { color: #8fff88; font-style: italic; }
+    .error { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="flag"><span class="flag-icon">🇦🇴</span><span>SIMGEC Chat - Assistente Educacional</span></div>
+    <a class="nav-link" href="/dashboard">← Voltar ao Dashboard</a>
+  </div>
+
+  <header>
+    <h1>💬 Assistente Educacional com ChatGPT</h1>
+  </header>
+
+  <main>
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="message system">Bem-vindo ao assistente educacional! Pode fazer perguntas sobre educação, gestão escolar, e muito mais. 👋</div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="messageInput" placeholder="Escreva sua pergunta..." />
+        <button id="sendBtn" onclick="sendMessage()">Enviar</button>
+        <button class="clear-btn" id="clearBtn" onclick="clearChat()">Limpar</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const token = localStorage.getItem('simgc_token');
+    const messagesContainer = document.getElementById('chatMessages');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    if (!token) {
+      window.location.href = '/';
+    }
+
+    function addMessage(text, type) {
+      const msgEl = document.createElement('div');
+      msgEl.className = `message ${type}`;
+      msgEl.textContent = text;
+      messagesContainer.appendChild(msgEl);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      addMessage(message, 'user');
+      messageInput.value = '';
+      sendBtn.disabled = true;
+
+      // Show loading indicator
+      addMessage('Pensando...', 'loading');
+
+      try {
+        const response = await fetch('/chat/message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          addMessage(`❌ Erro: ${error.message}`, 'error');
+        } else {
+          const data = await response.json();
+          // Remove loading message
+          const loadingMsg = messagesContainer.querySelector('.message.loading');
+          if (loadingMsg) loadingMsg.remove();
+          addMessage(data.message, 'assistant');
+        }
+      } catch (err) {
+        addMessage(`❌ Erro: ${err.message}`, 'error');
+        console.error('Chat error:', err);
+      } finally {
+        sendBtn.disabled = false;
+        messageInput.focus();
+      }
+    }
+
+    async function clearChat() {
+      if (!confirm('Tem a certeza que deseja apagar o histórico de conversa?')) return;
+
+      try {
+        await fetch('/chat/clear', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        messagesContainer.innerHTML = '<div class="message system">Conversa apagada. Pode começar uma nova! 👋</div>';
+      } catch (err) {
+        console.error('Clear error:', err);
+      }
+    }
+
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
+</body>
+</html>

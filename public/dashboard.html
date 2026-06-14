@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#d60000" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="SIMGEC" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23d60000' width='192' height='192'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='80' font-weight='bold' fill='%23b8ff6c' font-family='Arial'>S</text></svg>" />
+  <title>SIMGEC Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #000; color: #b8ff6c; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: linear-gradient(90deg, #d60000 0%, #d60000 40%, #000 40%, #000 100%); color: white; border-bottom: 1px solid #00ff66; }
+    .flag { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+    .flag-icon { font-size: 1.5rem; }
+    .nav-container { display: flex; gap: 12px; align-items: center; }
+    .nav-link { background: transparent; border: 1px solid #00ff66; color: #00ff66; padding: 8px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.2s; font-size: 0.9rem; }
+    .nav-link:hover { background: #00ff66; color: #000; }
+    header { padding: 24px 24px 12px; }
+    h1 { margin: 0; color: #b8ff6c; text-shadow: 0 0 24px rgba(184,255,108,0.5); }
+    main { padding: 16px 24px 32px; }
+    .card { background: rgba(0,0,0,0.8); border: 1px solid #00ff66; border-radius: 16px; box-shadow: 0 0 30px rgba(0,255,102,0.2); margin-bottom: 16px; padding: 20px; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .stat { background: rgba(0,255,102,0.1); border: 1px solid #00ff66; padding: 20px; border-radius: 12px; text-align: center; }
+    .stat-value { font-size: 2.5rem; font-weight: bold; color: #00ff66; }
+    .stat-label { color: #8fff88; margin-top: 8px; font-size: 0.95rem; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(0,255,102,0.2); }
+    .table th { color: #d4ff9e; background: rgba(0,255,102,0.05); }
+    .table td { color: #f5f9df; }
+    .status { display: inline-flex; align-items: center; gap: 8px; }
+    .badge { padding: 4px 10px; border-radius: 999px; background: #00ff66; color: #000; font-size: 0.78rem; }
+    .error { color: #ff6b6b; }
+    .chart-container { position: relative; height: 300px; margin-top: 16px; margin-bottom: 16px; }
+    .btn-group { display: flex; gap: 12px; }
+    .btn { background: #00ff66; color: #000; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .btn:hover { background: #9aff92; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="flag"><span class="flag-icon">🇦🇴</span><span>Angola</span></div>
+    <div class="nav-container">
+      <a class="nav-link" href="/registrar-aluno">➕ Registar Aluno</a>
+      <a class="nav-link" href="/chat">💬 Chat</a>
+      <a class="nav-link" id="adminLink" style="display:none;" href="/admin">⚙️ Admin</a>
+      <button class="nav-link" id="logoutButton" style="cursor: pointer;">🚪 Logout</button>
+    </div>
+  </div>
+  <header>
+    <h1>Dashboard SIMGEC</h1>
+  </header>
+  <main>
+    <div class="grid">
+      <div class="stat">
+        <div class="stat-value" id="totalAlunos">0</div>
+        <div class="stat-label">Total de Alunos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="totalClasses">0</div>
+        <div class="stat-label">Turmas Ativas</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" id="avgAge">0</div>
+        <div class="stat-label">Idade Média</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Distribuição de Alunos por Turma</h2>
+      <div class="chart-container">
+        <canvas id="classeChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Distribuição por Faixa Etária</h2>
+      <div class="chart-container">
+        <canvas id="ageChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Últimos Alunos Registados</h2>
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>Nome</th><th>Idade</th><th>Turma</th></tr>
+        </thead>
+        <tbody id="alunosTable"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Eventos em Tempo Real</h2>
+      <pre id="eventsLog" style="white-space: pre-wrap; word-break: break-word; max-height: 240px; overflow: auto; background: rgba(0,255,102,0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(0,255,102,0.2);"></pre>
+    </div>
+  </main>
+
+  <script>
+    const statusEl = document.getElementById('totalAlunos');
+    const totalAlunosEl = document.getElementById('totalAlunos');
+    const totalClassesEl = document.getElementById('totalClasses');
+    const avgAgeEl = document.getElementById('avgAge');
+    const alunosTableEl = document.getElementById('alunosTable');
+    const eventsLogEl = document.getElementById('eventsLog');
+    const adminLink = document.getElementById('adminLink');
+    const logoutBtn = document.getElementById('logoutButton');
+
+    let classeChart, ageChart;
+
+    function appendEvent(text) {
+      eventsLogEl.textContent = `${new Date().toLocaleTimeString()} - ${text}\n${eventsLogEl.textContent}`;
+    }
+
+    async function loadResumo() {
+      try {
+        const token = localStorage.getItem('simgc_token');
+        const userRole = localStorage.getItem('simgc_role');
+        
+        if (!token) {
+          window.location.href = '/';
+          return;
+        }
+
+        // Show admin link if user is admin
+        if (userRole === 'admin') {
+          adminLink.style.display = 'inline-block';
+        }
+
+        const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+        const [resAnalytics, resAlunos] = await Promise.all([
+          fetch('/analytics/summary', { headers }),
+          fetch('/alunos', { headers })
+        ]);
+
+        if (resAnalytics.ok) {
+          const summary = await resAnalytics.json();
+          totalAlunosEl.textContent = summary.totalAlunos;
+          totalClassesEl.textContent = summary.alunosPorTurma ? summary.alunosPorTurma.length : 0;
+          renderClasseChart(summary.alunosPorTurma || []);
+        } else {
+          appendEvent('⚠️ Erro ao carregar estatísticas');
+        }
+
+        if (resAlunos.ok) {
+          const alunos = await resAlunos.json();
+          alunosTableEl.innerHTML = alunos.slice(0, 10).map(aluno => 
+            `<tr><td>${aluno.id}</td><td>${aluno.nome}</td><td>${aluno.idade}</td><td>${aluno.turma}</td></tr>`
+          ).join('');
+          
+          const avgAge = alunos.length > 0 
+            ? (alunos.reduce((sum, a) => sum + a.idade, 0) / alunos.length).toFixed(1)
+            : 0;
+          avgAgeEl.textContent = avgAge;
+          
+          renderAgeChart(alunos);
+          appendEvent('✅ Dashboard atualizado');
+        } else {
+          alunosTableEl.innerHTML = `<tr><td colspan="4" class="error">Falha ao carregar alunos</td></tr>`;
+        }
+      } catch (err) {
+        appendEvent('❌ Erro: ' + err.message);
+      }
+    }
+
+    function renderClasseChart(classes) {
+      const ctx = document.getElementById('classeChart').getContext('2d');
+      if (classeChart) classeChart.destroy();
+      classeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: classes.map(c => c.turma),
+          datasets: [{
+            label: 'Alunos por Turma',
+            data: classes.map(c => c.total),
+            backgroundColor: '#00ff66',
+            borderColor: '#b8ff6c',
+            borderWidth: 2
+          }]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#b8ff6c' } } },
+          scales: { 
+            y: { ticks: { color: '#8fff88' }, grid: { color: 'rgba(0,255,102,0.1)' } }, 
+            x: { ticks: { color: '#8fff88' }, grid: { color: 'rgba(0,255,102,0.1)' } } 
+          }
+        }
+      });
+    }
+
+    function renderAgeChart(alunos) {
+      const ageGroups = { '5-10': 0, '11-14': 0, '15-18': 0, '18+': 0 };
+      alunos.forEach(a => {
+        if (a.idade <= 10) ageGroups['5-10']++;
+        else if (a.idade <= 14) ageGroups['11-14']++;
+        else if (a.idade <= 18) ageGroups['15-18']++;
+        else ageGroups['18+']++;
+      });
+
+      const ctx = document.getElementById('ageChart').getContext('2d');
+      if (ageChart) ageChart.destroy();
+      ageChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(ageGroups),
+          datasets: [{
+            data: Object.values(ageGroups),
+            backgroundColor: ['#00ff66', '#b8ff6c', '#92ff74', '#6fdd5c']
+          }]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#b8ff6c' } } }
+        }
+      });
+    }
+
+    function connectEvents() {
+      const token = localStorage.getItem('simgc_token');
+      if (!token) {
+        window.location.href = '/';
+        return;
+      }
+
+      const source = new EventSource('/events?token=' + encodeURIComponent(token));
+
+      source.onopen = () => appendEvent('📡 Conexão SSE estabelecida');
+      source.onerror = () => {
+        appendEvent('⚠️ Erro na conexão SSE');
+        setTimeout(connectEvents, 3000);
+      };
+
+      source.addEventListener('alunos', (event) => {
+        const payload = JSON.parse(event.data);
+        appendEvent(`📝 ${payload.action.toUpperCase()}: ${payload.aluno.nome}`);
+        loadResumo();
+      });
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('simgc_token');
+      localStorage.removeItem('simgc_role');
+      window.location.href = '/';
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadResumo();
+      connectEvents();
+    });
+  </script>
+</body>
+</html>
