@@ -8,6 +8,7 @@ API backend em Node.js/Express para gestão de alunos com suporte a SQL, autenti
 - Persistência em `SQLite` com arquivo `simgec.db`.
 - Validação de entrada com `Joi`.
 - Autenticação JWT em `/auth/login` e `/auth/register`.
+- Importação Excel de escolas em `/escolas/import/excel` e logs em `/escolas/import/logs`.
 - Rotas de gestão de alunos em `/alunos`.
 - Dashboard em tempo real por `SSE` em `/events`.
 - Analytics em `/analytics/summary`.
@@ -42,6 +43,13 @@ npm start
 ```
 
 O servidor ficará disponível em `http://localhost:3000`.
+
+## Testes
+
+- `npm test` — executa toda a suíte de integração em `test/*.test.js`
+- `npm run test:db` — executa apenas o teste de banco temporário em `test/import-db.test.js`
+
+> O teste de banco temporário usa uma cópia isolada de `simgec.db` para não alterar os dados reais.
 
 ## Usuário administrador padrão
 
@@ -85,6 +93,71 @@ O servidor ficará disponível em `http://localhost:3000`.
 - `GET /analytics/summary`
   - Requer cabeçalho `Authorization: Bearer <token>`.
   - Retorna total de alunos e contagem por turma.
+
+### Importação de escolas via Excel
+
+> Pré-requisito: o ficheiro Excel deve estar presente na raiz do projeto com o nome exato `07 - Cubal  - Criação e Recriação de Escolas.xlsx`.
+
+- `POST /escolas/import/excel?dry=true`
+  - Requer `Authorization: Bearer <token>` com usuário `admin`.
+  - Executa uma simulação de importação sem gravar no banco.
+  - Gera log em `logs/import-escolas-dry-*.json`.
+  - Exemplo:
+
+    ```bash
+    curl -X POST "http://localhost:3000/escolas/import/excel?dry=true" \
+      -H "Authorization: Bearer <TOKEN>"
+    ```
+
+- `POST /escolas/import/excel`
+  - Requer `Authorization: Bearer <token>` com usuário `admin`.
+  - Executa a importação real do arquivo Excel padrão.
+  - Gera log em `logs/import-escolas-run-*.json`.
+  - Exemplo:
+
+    ```bash
+    curl -X POST "http://localhost:3000/escolas/import/excel" \
+      -H "Authorization: Bearer <TOKEN>"
+    ```
+
+- `POST /escolas/import/excel?autoApply=true`
+  - Requer `Authorization: Bearer <token>` com usuário `admin`.
+  - Executa primeiro dry-run e depois grava os dados reais.
+  - Gera dois logs separados: dry e apply.
+  - Exemplo:
+
+    ```bash
+    curl -X POST "http://localhost:3000/escolas/import/excel?autoApply=true" \
+      -H "Authorization: Bearer <TOKEN>"
+    ```
+
+- `POST /escolas/import/excel/reprocess-missing`
+  - Requer `Authorization: Bearer <token>` com usuário `admin`.
+  - Reprocessa apenas os códigos faltantes no banco para o arquivo Excel padrão.
+  - Exemplo:
+
+    ```bash
+    curl -X POST "http://localhost:3000/escolas/import/excel/reprocess-missing" \
+      -H "Authorization: Bearer <TOKEN>"
+    ```
+
+- `GET /escolas/import/logs`
+  - Lista os arquivos de log gerados pelos fluxos de importação.
+  - Exemplo:
+
+    ```bash
+    curl -H "Authorization: Bearer <TOKEN>" \
+      http://localhost:3000/escolas/import/logs
+    ```
+
+- `GET /escolas/import/logs/:fileName`
+  - Retorna o conteúdo JSON de um log específico.
+  - Exemplo:
+
+    ```bash
+    curl -H "Authorization: Bearer <TOKEN>" \
+      http://localhost:3000/escolas/import/logs/<NOME_DO_ARQUIVO>.json
+    ```
 
 ### Dashboard em tempo real
 
