@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMGEC Dashboard Demo Animado</title>
+  <link rel="stylesheet" href="UI-Dashboard-Mockup.css" />
+  <style>
+    body { opacity: 0; transition: opacity 0.6s ease-in-out; }
+    body.loaded { opacity: 1; }
+    .hero-card, .metric-card, .panel, .action-card { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+    .hero-card:hover, .metric-card:hover, .panel:hover, .action-card:hover { transform: translateY(-4px); box-shadow: 0 24px 45px rgba(15, 23, 42, 0.12); }
+    .demo-nav button { transition: background-color 0.25s ease, color 0.25s ease; }
+    .chart-placeholder { position: relative; overflow: hidden; }
+    .chart-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top left, rgba(30, 136, 229, 0.16), transparent 35%),
+                  radial-gradient(circle at bottom right, rgba(67, 160, 71, 0.12), transparent 28%);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .chart-placeholder.visible::before { opacity: 1; }
+    .demo-header, .hero-card, .metric-grid, .content-grid, .actions-row { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s forwards; }
+    .demo-header { animation-delay: 0.1s; }
+    .hero-card { animation-delay: 0.2s; }
+    .metric-grid { animation-delay: 0.3s; }
+    .content-grid { animation-delay: 0.4s; }
+    .actions-row { animation-delay: 0.5s; }
+    @keyframes fadeInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-header">
+    <div>
+      <h1>SIMGEC Demo Animado</h1>
+      <p style="color:#64748B; margin:4px 0 0;">Uma experiência mais fluida com transições sutis e feedback visual.</p>
+    </div>
+    <div class="demo-nav">
+      <button class="nav-item active" data-page="dashboard">Dashboard</button>
+      <button class="nav-item" data-page="escolas">Escolas</button>
+      <button class="nav-item" data-page="alunos">Alunos</button>
+      <button class="nav-item" data-page="matriculas">Matrículas</button>
+      <button class="nav-item" data-page="relatorios">Relatórios</button>
+    </div>
+  </div>
+
+  <div class="hero-card">
+    <div>
+      <p class="hero-label">Painel de gestão</p>
+      <h2 id="hero-title">Resumo das escolas e matrículas</h2>
+    </div>
+    <div class="hero-actions">
+      <button class="button-secondary">Importar dados</button>
+      <button class="button-primary">Novo relatório</button>
+    </div>
+  </div>
+
+  <section class="metric-grid">
+    <article class="metric-card"><span class="metric-label">Alunos ativos</span><strong>5.240</strong></article>
+    <article class="metric-card"><span class="metric-label">Escolas conectadas</span><strong>18</strong></article>
+    <article class="metric-card"><span class="metric-label">Matrículas novas</span><strong>312</strong></article>
+    <article class="metric-card"><span class="metric-label">Avaliações concluídas</span><strong>92%</strong></article>
+  </section>
+
+  <section class="content-grid">
+    <div class="panel panel-large">
+      <div class="panel-header">
+        <h3 id="panel-title">Desempenho por escola</h3>
+        <span class="badge badge-success">Em alta</span>
+      </div>
+      <div class="chart-placeholder visible" id="chart-placeholder">Gráfico de barras</div>
+    </div>
+    <div class="panel panel-small">
+      <div class="panel-header"><h3>Status geral</h3></div>
+      <div class="status-list">
+        <div><span>Presença média</span><strong>89%</strong></div>
+        <div><span>Taxa de aprovação</span><strong>94%</strong></div>
+        <div><span>Alertas abertos</span><strong class="alert-text">7</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="actions-row">
+    <div class="action-card"><span class="action-icon">📄</span><div><h4>Relatórios</h4><p>Gerar exportações em PDF e Excel</p></div></div>
+    <div class="action-card"><span class="action-icon">✅</span><div><h4>Matrículas</h4><p>Validar registros e aprovar inscrições</p></div></div>
+    <div class="action-card"><span class="action-icon">⚠️</span><div><h4>Alertas</h4><p>Ações pendentes e notificações urgentes</p></div></div>
+  </section>
+
+  <div class="bottom-bar">
+    <button class="nav-item active" data-page="dashboard"><span>🏠</span>Dashboard</button>
+    <button class="nav-item" data-page="escolas"><span>🏫</span>Escolas</button>
+    <button class="nav-item" data-page="alunos"><span>👥</span>Alunos</button>
+    <button class="nav-item" data-page="matriculas"><span>📝</span>Matrículas</button>
+    <button class="nav-item" data-page="relatorios"><span>📊</span>Relatórios</button>
+  </div>
+
+  <script>
+    window.addEventListener('load', () => document.body.classList.add('loaded'));
+    const pages = {
+      dashboard: { title: 'Resumo das escolas e matrículas', panel: 'Desempenho por escola', chart: 'Gráfico de barras' },
+      escolas: { title: 'Gestão de escolas', panel: 'Visão geral das escolas', chart: 'Indicadores por unidade' },
+      alunos: { title: 'Gestão de alunos', panel: 'Desempenho dos estudantes', chart: 'Matrículas por turma' },
+      matriculas: { title: 'Matrículas em andamento', panel: 'Processamento de matrículas', chart: 'Status de aprovação' },
+      relatorios: { title: 'Relatórios gerenciais', panel: 'Relatórios ativos', chart: 'Desempenho consolidado' },
+    };
+    const heroTitle = document.getElementById('hero-title');
+    const panelTitle = document.getElementById('panel-title');
+    const chartPlaceholder = document.getElementById('chart-placeholder');
+    const navButtons = document.querySelectorAll('.nav-item');
+    function switchPage(page) {
+      const data = pages[page];
+      heroTitle.textContent = data.title;
+      panelTitle.textContent = data.panel;
+      chartPlaceholder.textContent = data.chart;
+      navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+    }
+    navButtons.forEach(button => button.addEventListener('click', () => switchPage(button.dataset.page)));
+  </script>
+</body>
+</html>

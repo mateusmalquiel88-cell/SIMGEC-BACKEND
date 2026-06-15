@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMGEC Dashboard Mockup</title>
+  <link rel="stylesheet" href="UI-Dashboard-Mockup.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">S</div>
+        <div>
+          <strong>SIMGEC</strong>
+          <span>Município do Cubal</span>
+        </div>
+      </div>
+      <nav>
+        <a class="active" href="#">Dashboard</a>
+        <a href="#">Escolas</a>
+        <a href="#">Alunos</a>
+        <a href="#">Matrículas</a>
+        <a href="#">Relatórios</a>
+        <a href="#">Configurações</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Gestão Integrada da Educação</p>
+          <h1>SIMGEC - Município do Cubal</h1>
+        </div>
+        <div class="top-actions">
+          <button class="icon-button">🔔</button>
+          <button class="profile-button">👤</button>
+        </div>
+        <div class="theme-switcher">
+          <span class="theme-label">Tema</span>
+          <button class="theme-button active" data-theme="system">Sistema</button>
+          <button class="theme-button" data-theme="dark">Escuro</button>
+        </div>
+      </header>
+
+      <section class="hero-card">
+        <div>
+          <p class="hero-label">Painel de gestão</p>
+          <h2>Resumo das escolas e matrículas</h2>
+        </div>
+        <div class="hero-actions">
+          <button class="button-secondary">Importar dados</button>
+          <button class="button-primary">Novo relatório</button>
+        </div>
+      </section>
+
+      <section class="metric-grid">
+        <article class="metric-card">
+          <span class="metric-label">Alunos ativos</span>
+          <strong>5.240</strong>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Escolas conectadas</span>
+          <strong>18</strong>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Matrículas novas</span>
+          <strong>312</strong>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Avaliações concluídas</span>
+          <strong>92%</strong>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel panel-large">
+          <div class="panel-header">
+            <h3>Desempenho por escola</h3>
+            <span class="badge badge-success">Em alta</span>
+          </div>
+          <div class="chart-placeholder">Gráfico de barras</div>
+        </div>
+
+        <div class="panel panel-small">
+          <div class="panel-header">
+            <h3>Status geral</h3>
+          </div>
+          <div class="status-list">
+            <div>
+              <span>Presença média</span>
+              <strong>89%</strong>
+            </div>
+            <div>
+              <span>Taxa de aprovação</span>
+              <strong>94%</strong>
+            </div>
+            <div>
+              <span>Alertas abertos</span>
+              <strong class="alert-text">7</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="actions-row">
+        <div class="action-card">
+          <span class="action-icon">📄</span>
+          <div>
+            <h4>Relatórios</h4>
+            <p>Gerar exportações em PDF e Excel</p>
+          </div>
+        </div>
+        <div class="action-card">
+          <span class="action-icon">✅</span>
+          <div>
+            <h4>Matrículas</h4>
+            <p>Validar registros e aprovar inscrições</p>
+          </div>
+        </div>
+        <div class="action-card">
+          <span class="action-icon">⚠️</span>
+          <div>
+            <h4>Alertas</h4>
+            <p>Ações pendentes e notificações urgentes</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script>
+    const themeButtons = document.querySelectorAll('.theme-button');
+    function setTheme(mode) {
+      document.body.classList.remove('theme-system', 'theme-dark');
+      document.body.classList.add('theme-' + mode);
+      themeButtons.forEach((button) => {
+        button.classList.toggle('active', button.dataset.theme === mode);
+      });
+    }
+    themeButtons.forEach((button) => {
+      button.addEventListener('click', () => setTheme(button.dataset.theme));
+    });
+    setTheme('system');
+  </script>
+</body>
+</html>

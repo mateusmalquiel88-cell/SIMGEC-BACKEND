@@ -3,6 +3,8 @@ const STATIC_ASSETS = [
   '/',
   '/login.html',
   '/dashboard.html',
+  '/UI-Dashboard-Mockup.html',
+  '/UI-Dashboard-Mockup.css',
   '/admin.html',
   '/chat.html',
   '/registrar-aluno.html',
@@ -185,13 +187,15 @@ async function syncPendingRequests() {
 
 function openIndexedDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('simgec-db', 1);
+    const request = indexedDB.open('simgec-offline', 1);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result);
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       if (!db.objectStoreNames.contains('pending-requests')) {
-        db.createObjectStore('pending-requests', { keyPath: 'id', autoIncrement: true });
+        const store = db.createObjectStore('pending-requests', { keyPath: 'id', autoIncrement: true });
+        store.createIndex('status', 'status', { unique: false });
+        store.createIndex('timestamp', 'timestamp', { unique: false });
       }
     };
   });

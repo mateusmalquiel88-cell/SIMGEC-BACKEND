@@ -18,6 +18,23 @@ class OfflineSyncManager {
     this.syncWhenOnline();
   }
 
+  async registerBackgroundSync() {
+    if (!('serviceWorker' in navigator) || !('SyncManager' in window)) {
+      console.log('[OfflineSync] Background sync não suportado');
+      return;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      if ('sync' in registration) {
+        await registration.sync.register('sync-data');
+        console.log('[OfflineSync] Background sync registado');
+      }
+    } catch (err) {
+      console.warn('[OfflineSync] Falha ao registar background sync:', err);
+    }
+  }
+
   setupEventListeners() {
     window.addEventListener('online', () => {
       this.isOnline = true;
@@ -79,15 +96,12 @@ class OfflineSyncManager {
    * Guardar um pedido pendente para sincronizar depois
    */
   async addPendingRequest(method, url, body, headers = {}) {
-    const token = localStorage.getItem('simgc_token');
-    
     const request = {
       method,
       url,
       body,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
         ...headers
       },
       timestamp: new Date().toISOString(),
@@ -99,8 +113,15 @@ class OfflineSyncManager {
       const store = transaction.objectStore('pending-requests');
       const addRequest = store.add(request);
 
-      addRequest.onsuccess = () => {
+      addRequest.onsuccess = async () => {
         console.log('[OfflineSync] Pedido guardado:', addRequest.result);
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+          try {
+            await this.registerBackgroundSync();
+          } catch (err) {
+            console.warn('[OfflineSync] Não foi possível registar sync:', err);
+          }
+        }
         resolve(addRequest.result);
       };
 
@@ -136,6 +157,7 @@ class OfflineSyncManager {
           const response = await fetch(req.url, {
             method: req.method,
             headers: req.headers,
+            credentials: 'same-origin',
             body: req.body ? JSON.stringify(req.body) : null
           });
 
@@ -285,6 +307,7 @@ class OfflineSyncManager {
           'Content-Type': 'application/json',
           ...headers
         },
+        credentials: 'same-origin',
         body: body ? JSON.stringify(body) : null
       });
 
@@ -301,9 +324,9 @@ class OfflineSyncManager {
     } catch (err) {
       console.warn('[OfflineSync] Erro no fetch, tentando cache...', err);
 
-      // Se for POST/PUT/DELETE offline, guardar pedido
+      // Se for POST/PUT/DELETE offline ou falha de rede, guardar pedido
       if (method !== 'GET') {
-        if (!navigator.onLine) {
+        if (!navigator.onLine || err instanceof TypeError) {
           await this.addPendingRequest(method, url, body, headers);
           return { offline: true, message: 'Pedido guardado - será sincronizado quando conectar' };
         }

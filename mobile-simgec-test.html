@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teste Mobile SIMGEC</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #0b0b0b; color: #e7ffcc; }
+    .page { max-width: 780px; margin: 0 auto; padding: 24px; }
+    h1, h2 { color: #b8ff6c; }
+    .card { background: rgba(0, 0, 0, 0.82); border: 1px solid #3cb371; border-radius: 16px; padding: 20px; box-shadow: 0 0 24px rgba(0, 255, 102, 0.18); }
+    .note { color: #a8d08d; margin-top: 12px; }
+    .qr-block { display: flex; flex-wrap: wrap; gap: 24px; align-items: center; justify-content: center; }
+    .qr-card { text-align: center; }
+    .qr-card img { width: 280px; max-width: 100%; border: 2px solid #00ff66; border-radius: 16px; }
+    .steps { margin-top: 20px; }
+    .steps li { margin: 12px 0; line-height: 1.6; }
+    .url { display: inline-block; margin-top: 12px; padding: 10px 14px; border-radius: 10px; background: #162a0f; border: 1px solid #00ff66; color: #b8ff6c; text-decoration: none; }
+    .warning { color: #ffb86c; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="card">
+      <h1>Teste Móvel SIMGEC</h1>
+      <p>Usa o teu telemóvel para ler o QR code abaixo e abrir a aplicação SIMGEC no browser da rede local.</p>
+      <div class="qr-block">
+        <div class="qr-card">
+          <img src="mobile-simgec-qr.png" alt="QR code SIMGEC" />
+          <p class="note">URL de acesso: <strong>http://192.168.166.84:3000/</strong></p>
+        </div>
+      </div>
+      <div class="steps">
+        <h2>Passo a passo</h2>
+        <ol>
+          <li>Certifica-te de que o PC e o telemóvel estão na mesma rede Wi-Fi.</li>
+          <li>No telemóvel, abre a app de leitura de QR ou a câmara e aponta para o QR code.</li>
+          <li>Quando o link carregar, toca para abrir em <strong>http://192.168.166.84:3000/</strong>.</li>
+          <li>No SIMGEC, faz login com:</li>
+          <ul>
+            <li><strong>Email:</strong> marotheus.mora</li>
+            <li><strong>Senha:</strong> M@iqueias318565</li>
+          </ul>
+          <li>Se o teste falhar, verifica o firewall do Windows ou repete o passo do IP do PC.</li>
+        </ol>
+      </div>
+      <p class="warning">Nota: se o telemóvel não abrir, utiliza o IP direto no browser: <a class="url" href="http://192.168.166.84:3000/">http://192.168.166.84:3000/</a></p>
+    </div>
+  </div>
+</body>
+</html>

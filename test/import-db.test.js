@@ -29,8 +29,27 @@ describe('Importação Excel - banco temporário', function() {
   before((done) => {
     copyTestDb();
     process.env.DATABASE_PATH = 'test/temp-simgc.db';
+<<<<<<< HEAD
+    delete require.cache[require.resolve('../config')];
     delete require.cache[require.resolve('../db')];
     delete require.cache[require.resolve('../server')];
+    delete require.cache[require.resolve('../routes/auth')];
+    delete require.cache[require.resolve('../routes/escolas')];
+    delete require.cache[require.resolve('../routes/alunos')];
+    delete require.cache[require.resolve('../routes/analytics')];
+    delete require.cache[require.resolve('../routes/admin')];
+    delete require.cache[require.resolve('../routes/chat')];
+=======
+    delete require.cache[require.resolve('../config')];
+    delete require.cache[require.resolve('../db')];
+    delete require.cache[require.resolve('../server')];
+    delete require.cache[require.resolve('../routes/auth')];
+    delete require.cache[require.resolve('../routes/escolas')];
+    delete require.cache[require.resolve('../routes/alunos')];
+    delete require.cache[require.resolve('../routes/analytics')];
+    delete require.cache[require.resolve('../routes/admin')];
+    delete require.cache[require.resolve('../routes/chat')];
+>>>>>>> cb63e0d (Improve escolas Excel import use upsert preserve updated_at align tests and docs)
     db = require('../db');
     app = require('../server');
 

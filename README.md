@@ -183,3 +183,53 @@ O servidor ficará disponível em `http://localhost:3000`.
 - O dashboard usa EventSource para atualizar a lista de alunos automaticamente quando há mudanças.
 - O usuário admin padrão é criado se não existir.
 - Para produção, defina `JWT_SECRET` em variáveis de ambiente e proteja o `simgec.db`.
+
+## Deploy com Docker
+
+O projeto inclui um `Dockerfile` e um `docker-compose.yml` para executar a aplicação em container.
+
+### Usar Docker diretamente
+
+```bash
+cd "c:\Users\us\OneDrive\Documentos\SIMGEC-BACKEND"
+docker build -t simgec-backend .
+docker run -p 3000:3000 -e JWT_SECRET="uma_senha_segura" -e DATABASE_PATH="/usr/src/app/data/simgec.db" simgec-backend
+```
+
+### Usar Docker Compose
+
+```bash
+cd "c:\Users\us\OneDrive\Documentos\SIMGEC-BACKEND"
+docker compose up --build
+```
+
+O serviço será exposto em `http://localhost:3000`.
+
+### Atalhos npm para Docker
+
+```bash
+npm run docker:build  # Build do container
+npm run docker:up     # Start com docker-compose
+npm run docker:down   # Parar serviços
+npm run docker:logs   # Ver logs ao vivo
+```
+
+### Arquivo de ambiente
+
+Copie o exemplo para `.env` e ajuste os segredos:
+
+```bash
+cp .env.example .env
+```
+
+Edite `.env` e defina pelo menos:
+
+- `JWT_SECRET`
+- `DATABASE_PATH`
+- `NODE_ENV=production`
+
+### Notas de produção
+
+- Atualize `docker-compose.yml` para usar um `JWT_SECRET` forte.
+- Use volumes para armazenar `data` e `logs` fora do container.
+- Proteja o arquivo `simgec.db` e defina permissões adequadas no host.

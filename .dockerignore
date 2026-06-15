@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+logs
+07 - Cubal  - Criação e Recriação de Escolas.xlsx
+*.db
+*.sqlite
+*.sqlite3
+.env

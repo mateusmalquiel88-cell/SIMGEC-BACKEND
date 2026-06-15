@@ -1,9 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const config = require("./config");
+const logger = require("./logger");
+const db = require("./db");
 const events = require("./events");
 const alunosRoutes = require("./routes/alunos");
-const authRoutes = require("./routes/auth").router;
+const authRoutes = require("./routes/auth");
 const analyticsRoutes = require("./routes/analytics");
 const adminRoutes = require("./routes/admin");
 const escolasRoutes = require("./routes/escolas");
@@ -14,12 +17,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// Logging middleware
-app.use((req, res, next) => {
-  console.log(`[${new Date().toLocaleTimeString()}] ${req.method} ${req.path}`);
-  next();
-});
+app.use(express.urlencoded({ extended: true }));
+app.use(logger.requestLogger);
 
 const { authenticate } = require("./middleware/auth");
 
@@ -29,6 +28,15 @@ app.get("/", (req, res) => {
 
 app.get("/dashboard", verifyPageToken, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "dashboard.html"));
+});
+
+// Servir explicitamente a mockup do dashboard (acesso direto)
+app.get("/UI-Dashboard-Mockup.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "UI-Dashboard-Mockup.html"));
+});
+
+app.get(["/mockup", "/mockup/"], (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "UI-Dashboard-Mockup.html"));
 });
 
 app.get("/admin", verifyPageToken, (req, res) => {
@@ -47,23 +55,31 @@ app.get("/chat", verifyPageToken, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "chat.html"));
 });
 
+app.get("/health", (req, res) => {
+  db.get("SELECT 1 AS ok", [], (err, row) => {
+    if (err) {
+      console.error("Health check database error:", err);
+      return res.status(503).json({ status: "fail", database: "unavailable" });
+    }
+    res.json({ status: "ok", uptime: process.uptime(), timestamp: new Date().toISOString(), database: row && row.ok === 1 ? "ok" : "unknown" });
+  });
+});
+
 // Registrar rotas de API ANTES de static files
-app.use("/auth", authRoutes);
-app.use("/alunos", alunosRoutes);
-console.log('Mounted /alunos');
-app.use("/escolas", escolasRoutes);
-console.log('Mounted /escolas');
-app.use("/analytics", analyticsRoutes);
-console.log('Mounted /analytics');
 app.use("/auth", authRoutes);
 app.use("/alunos", alunosRoutes);
 app.use("/escolas", escolasRoutes);
 app.use("/analytics", analyticsRoutes);
 app.use("/admin-api", adminRoutes);
 app.use("/chat-api", chatRoutes);
+
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/events/alunos", (req, res) => {
+  res.set({
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
-    Connection: "keep-alive"
+    Connection: "keep-alive",
   });
   res.flushHeaders();
   res.write("retry: 10000\n\n");
@@ -79,6 +95,11 @@ app.use("/chat-api", chatRoutes);
   });
 });
 
+app.get("/events", (req, res) => {
+  const query = req.url.includes("?") ? req.url.slice(req.url.indexOf("?")) : "";
+  res.redirect(`/events/alunos${query}`);
+});
+
 app.use((req, res) => {
   res.status(404).json({ message: "Rota não encontrada" });
 });
@@ -88,8 +109,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Erro interno do servidor" });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = config.port;
 
-app.listen(PORT, () => {
-  console.log(`Servidor a correr na porta ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, "0.0.0.0", () => {
+    logger.info(`Servidor a correr na porta ${PORT} e disponível em 0.0.0.0`);
+  });
+}
+
+module.exports = app;

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframe Detalhado SIMGEC</title>
+  <style>
+    :root {
+      --primary: #1E88E5;
+      --secondary: #43A047;
+      --accent: #FB8C00;
+      --background: #F5F7FA;
+      --surface: #FFFFFF;
+      --text: #1F2937;
+      --muted: #64748B;
+      --border: rgba(34, 43, 69, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--background); color: var(--text); }
+    .page { max-width: 1400px; margin: 0 auto; padding: 32px; }
+    h1, h2, h3 { margin: 0 0 16px; }
+    .section { margin-bottom: 40px; }
+    .surface { background: var(--surface); border: 1px solid var(--border); border-radius: 24px; box-shadow: 0 22px 45px rgba(15, 23, 42, 0.06); padding: 26px; }
+    .header-row { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; }
+    .pill { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); background: #FFFFFF; font-weight: 600; }
+    .pill span { font-size: 13px; color: var(--muted); }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .card { background: var(--surface); border-radius: 22px; border: 1px solid var(--border); padding: 22px; }
+    .card-hero { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+    .card-hero h2 { font-size: 30px; }
+    .button { border: none; border-radius: 16px; padding: 14px 22px; font-weight: 700; cursor: pointer; }
+    .button-primary { background: var(--primary); color: white; }
+    .button-secondary { background: var(--secondary); color: white; }
+    .button-accent { background: var(--accent); color: white; }
+    .metric { padding: 20px; border-radius: 22px; border: 1px solid var(--border); }
+    .metric small { display: block; color: var(--muted); margin-bottom: 10px; }
+    .metric strong { font-size: 32px; display: block; }
+    .panel { min-height: 240px; }
+    .panel .panel-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .panel .panel-title h3 { margin: 0; }
+    .panel .badge { background: var(--secondary); color: white; padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .placeholder { height: 260px; border-radius: 24px; background: linear-gradient(180deg, rgba(30, 136, 229, 0.12), rgba(67, 160, 71, 0.1)); display: grid; place-items: center; color: var(--muted); font-size: 16px; font-weight: 700; }
+    .status-row { display: grid; gap: 16px; }
+    .status-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; border-radius: 20px; background: #F8FAFB; }
+    .status-item strong { font-size: 20px; }
+    .actions-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .action-card { display: flex; align-items: center; gap: 18px; padding: 22px; border-radius: 24px; background: var(--surface); border: 1px solid var(--border); }
+    .action-icon { width: 54px; height: 54px; border-radius: 18px; display: grid; place-items: center; background: rgba(30, 136, 229, 0.12); font-size: 22px; }
+    .sidebar-outline { border-radius: 24px; border: 1px dashed var(--border); padding: 20px; }
+    .sidebar-item { margin-bottom: 16px; }
+    .sidebar-item:last-child { margin-bottom: 0; }
+    .sidebar-item span { display: block; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .sidebar-item strong { font-size: 15px; }
+
+    @media (max-width: 1100px) {
+      .header-row, .grid-4, .grid-3, .grid-2, .actions-grid { grid-template-columns: 1fr; }
+      .card-hero { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="section">
+      <div class="header-row">
+        <div>
+          <h1>Wireframe Detalhado</h1>
+          <p style="margin:0; color:#64748B; font-size:15px;">Visão completa do dashboard SIMGEC com tema claro e escuro.</p>
+        </div>
+        <div class="pill"><span>Modo Sistema / Escuro</span></div>
+      </div>
+    </section>
+
+    <section class="section surface">
+      <div class="card card-hero">
+        <div>
+          <p style="margin:0;color:#64748B;font-size:14px;text-transform:uppercase;letter-spacing:.12em;">Cabeçalho principal</p>
+          <h2>Dashboard central de gestão educacional</h2>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="button button-secondary">Importar dados</button>
+          <button class="button button-primary">Novo relatório</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section grid-4">
+      <div class="metric"><small>Alunos ativos</small><strong>5.240</strong></div>
+      <div class="metric"><small>Escolas conectadas</small><strong>18</strong></div>
+      <div class="metric"><small>Matrículas novas</small><strong>312</strong></div>
+      <div class="metric"><small>Avaliações concluídas</small><strong>92%</strong></div>
+    </section>
+
+    <section class="section grid-2">
+      <div class="panel surface">
+        <div class="panel-title">
+          <h3>Desempenho por escola</h3>
+          <div class="badge">Em alta</div>
+        </div>
+        <div class="placeholder">Gráfico de barras</div>
+      </div>
+      <div class="panel surface">
+        <div class="panel-title"><h3>Status geral</h3></div>
+        <div class="status-row">
+          <div class="status-item"><span>Presença média</span><strong>89%</strong></div>
+          <div class="status-item"><span>Taxa de aprovação</span><strong>94%</strong></div>
+          <div class="status-item"><span>Alertas abertos</span><strong style="color:#FB8C00;">7</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section actions-grid">
+      <div class="action-card"><div class="action-icon">📄</div><div><strong>Relatórios</strong><p style="margin:4px 0 0;color:#64748B;">Gerar PDF e Excel</p></div></div>
+      <div class="action-card"><div class="action-icon">✅</div><div><strong>Matrículas</strong><p style="margin:4px 0 0;color:#64748B;">Validar e aprovar registros</p></div></div>
+      <div class="action-card"><div class="action-icon">⚠️</div><div><strong>Alertas</strong><p style="margin:4px 0 0;color:#64748B;">Notificações urgentes</p></div></div>
+    </section>
+
+    <section class="section surface">
+      <h2>Estrutura do painel lateral</h2>
+      <div class="sidebar-outline">
+        <div class="sidebar-item"><span>Logo</span><strong>SIMGEC</strong></div>
+        <div class="sidebar-item"><span>Menu primário</span><strong>Dashboard / Escolas / Alunos / Matrículas / Relatórios / Configurações</strong></div>
+        <div class="sidebar-item"><span>Item ativo</span><strong>Dashboard destacado com cor de foco</strong></div>
+        <div class="sidebar-item"><span>Rodapé</span><strong>Ajuda e logout</strong></div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

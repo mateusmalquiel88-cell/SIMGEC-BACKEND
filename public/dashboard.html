@@ -45,8 +45,9 @@
   <div class="topbar">
     <div class="flag"><span class="flag-icon">🇦🇴</span><span>Angola</span></div>
     <div class="nav-container">
-      <a class="nav-link" href="/registrar-aluno">➕ Registar Aluno</a>
-      <a class="nav-link" href="/chat">💬 Chat</a>
+      <a class="nav-link" id="registerLink" href="/registrar-aluno">➕ Registar Aluno</a>
+      <a class="nav-link" id="chatLink" href="/chat">💬 Chat</a>
+      <a class="nav-link" id="mockupLink" href="/mockup">🎨 Mockup</a>
       <a class="nav-link" id="adminLink" style="display:none;" href="/admin">⚙️ Admin</a>
       <button class="nav-link" id="logoutButton" style="cursor: pointer;">🚪 Logout</button>
     </div>
@@ -100,6 +101,7 @@
   </main>
 
   <script>
+    // Token is provided via HttpOnly cookie; no token sync from query needed
     const statusEl = document.getElementById('totalAlunos');
     const totalAlunosEl = document.getElementById('totalAlunos');
     const totalClassesEl = document.getElementById('totalClasses');
@@ -107,6 +109,9 @@
     const alunosTableEl = document.getElementById('alunosTable');
     const eventsLogEl = document.getElementById('eventsLog');
     const adminLink = document.getElementById('adminLink');
+    const chatLink = document.getElementById('chatLink');
+    const registerLink = document.getElementById('registerLink');
+    const mockupLink = document.getElementById('mockupLink');
     const logoutBtn = document.getElementById('logoutButton');
 
     let classeChart, ageChart;
@@ -117,24 +122,38 @@
 
     async function loadResumo() {
       try {
-        const token = localStorage.getItem('simgc_token');
-        const userRole = localStorage.getItem('simgc_role');
-        
-        if (!token) {
+        // Verify session using HttpOnly cookie
+        const verifyRes = await fetch('/auth/verify', { credentials: 'same-origin' });
+        if (!verifyRes.ok) {
           window.location.href = '/';
           return;
         }
+        const verifyData = await verifyRes.json();
+        const userRole = verifyData.user && verifyData.user.role;
 
         // Show admin link if user is admin
         if (userRole === 'admin') {
           adminLink.style.display = 'inline-block';
+          adminLink.href = '/admin';
         }
 
-        const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+        if (chatLink) {
+          chatLink.href = '/chat';
+        }
+
+        if (registerLink) {
+          registerLink.href = '/registrar-aluno';
+        }
+
+        if (mockupLink) {
+          mockupLink.href = '/mockup';
+        }
+
+        const headers = { 'Content-Type': 'application/json' };
 
         const [resAnalytics, resAlunos] = await Promise.all([
-          fetch('/analytics/summary', { headers }),
-          fetch('/alunos', { headers })
+          fetch('/analytics/summary', { headers, credentials: 'same-origin' }),
+          fetch('/alunos', { headers, credentials: 'same-origin' })
         ]);
 
         if (resAnalytics.ok) {
@@ -223,13 +242,8 @@
     }
 
     function connectEvents() {
-      const token = localStorage.getItem('simgc_token');
-      if (!token) {
-        window.location.href = '/';
-        return;
-      }
-
-      const source = new EventSource('/events?token=' + encodeURIComponent(token));
+      // SSE will receive cookie automatically for same-origin requests
+      const source = new EventSource('/events/alunos');
 
       source.onopen = () => appendEvent('📡 Conexão SSE estabelecida');
       source.onerror = () => {
@@ -244,9 +258,13 @@
       });
     }
 
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('simgc_token');
-      localStorage.removeItem('simgc_role');
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch (err) {
+        console.warn('Logout fetch failed:', err);
+      }
+      document.cookie = 'simgc_token=; path=/; Max-Age=0; SameSite=Lax';
       window.location.href = '/';
     });
 

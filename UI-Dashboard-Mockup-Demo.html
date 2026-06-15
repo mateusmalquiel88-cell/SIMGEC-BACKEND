@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIMGEC Dashboard Demo</title>
+  <link rel="stylesheet" href="UI-Dashboard-Mockup.css" />
+  <style>
+    .demo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .demo-header h1 { margin: 0; font-size: 28px; }
+    .demo-content { display: grid; gap: 24px; }
+    .demo-nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .demo-nav button {
+      border: 1px solid rgba(30, 136, 229, 0.16);
+      background: white;
+      color: #1F2937;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .demo-nav button.active { background: #1E88E5; color: white; }
+    .bottom-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.08);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-around;
+      border-top: 1px solid rgba(34, 43, 69, 0.08);
+    }
+    .bottom-bar button {
+      border: none;
+      background: transparent;
+      color: #64748B;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .bottom-bar button.active { color: #1E88E5; }
+    .demo-panel { background: white; border-radius: 24px; border: 1px solid rgba(34, 43, 69, 0.08); padding: 22px; }
+    .demo-panel h3 { margin: 0 0 12px; }
+    @media (max-width: 900px) {
+      .app-shell { grid-template-columns: 1fr; padding-bottom: 96px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-header">
+    <div>
+      <h1>SIMGEC Demo</h1>
+      <p style="color:#64748B; margin:4px 0 0;">Mockup interativo com navegação principal.</p>
+    </div>
+    <div class="demo-nav">
+      <button class="nav-item active" data-page="dashboard">Dashboard</button>
+      <button class="nav-item" data-page="escolas">Escolas</button>
+      <button class="nav-item" data-page="alunos">Alunos</button>
+      <button class="nav-item" data-page="matriculas">Matrículas</button>
+      <button class="nav-item" data-page="relatorios">Relatórios</button>
+    </div>
+  </div>
+
+  <div class="demo-content">
+    <div class="hero-card">
+      <div>
+        <p class="hero-label">Painel de gestão</p>
+        <h2 id="hero-title">Resumo das escolas e matrículas</h2>
+      </div>
+      <div class="hero-actions">
+        <button class="button-secondary">Importar dados</button>
+        <button class="button-primary">Novo relatório</button>
+      </div>
+    </div>
+
+    <section class="metric-grid">
+      <article class="metric-card"><span class="metric-label">Alunos ativos</span><strong>5.240</strong></article>
+      <article class="metric-card"><span class="metric-label">Escolas conectadas</span><strong>18</strong></article>
+      <article class="metric-card"><span class="metric-label">Matrículas novas</span><strong>312</strong></article>
+      <article class="metric-card"><span class="metric-label">Avaliações concluídas</span><strong>92%</strong></article>
+    </section>
+
+    <section class="content-grid">
+      <div class="panel panel-large">
+        <div class="panel-header">
+          <h3 id="panel-title">Desempenho por escola</h3>
+          <span class="badge badge-success">Em alta</span>
+        </div>
+        <div class="chart-placeholder" id="chart-placeholder">Gráfico de barras</div>
+      </div>
+      <div class="panel panel-small">
+        <div class="panel-header"><h3>Status geral</h3></div>
+        <div class="status-list">
+          <div><span>Presença média</span><strong>89%</strong></div>
+          <div><span>Taxa de aprovação</span><strong>94%</strong></div>
+          <div><span>Alertas abertos</span><strong class="alert-text">7</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="actions-row">
+      <div class="action-card"><span class="action-icon">📄</span><div><h4>Relatórios</h4><p>Gerar exportações em PDF e Excel</p></div></div>
+      <div class="action-card"><span class="action-icon">✅</span><div><h4>Matrículas</h4><p>Validar registros e aprovar inscrições</p></div></div>
+      <div class="action-card"><span class="action-icon">⚠️</span><div><h4>Alertas</h4><p>Ações pendentes e notificações urgentes</p></div></div>
+    </section>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="nav-item active" data-page="dashboard"><span>🏠</span>Dashboard</button>
+    <button class="nav-item" data-page="escolas"><span>🏫</span>Escolas</button>
+    <button class="nav-item" data-page="alunos"><span>👥</span>Alunos</button>
+    <button class="nav-item" data-page="matriculas"><span>📝</span>Matrículas</button>
+    <button class="nav-item" data-page="relatorios"><span>📊</span>Relatórios</button>
+  </div>
+
+  <script>
+    const pages = {
+      dashboard: { title: 'Resumo das escolas e matrículas', panel: 'Desempenho por escola', chart: 'Gráfico de barras' },
+      escolas: { title: 'Gestão de escolas', panel: 'Visão geral das escolas', chart: 'Indicadores por unidade' },
+      alunos: { title: 'Gestão de alunos', panel: 'Desempenho dos estudantes', chart: 'Matrículas por turma' },
+      matriculas: { title: 'Matrículas em andamento', panel: 'Processamento de matrículas', chart: 'Status de aprovação' },
+      relatorios: { title: 'Relatórios gerenciais', panel: 'Relatórios ativos', chart: 'Desempenho consolidado' },
+    };
+    const heroTitle = document.getElementById('hero-title');
+    const panelTitle = document.getElementById('panel-title');
+    const chartPlaceholder = document.getElementById('chart-placeholder');
+    const navButtons = document.querySelectorAll('.nav-item');
+    function switchPage(page) {
+      const data = pages[page];
+      heroTitle.textContent = data.title;
+      panelTitle.textContent = data.panel;
+      chartPlaceholder.textContent = data.chart;
+      navButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.page === page));
+    }
+    navButtons.forEach(button => button.addEventListener('click', () => switchPage(button.dataset.page)));
+  </script>
+</body>
+</html>

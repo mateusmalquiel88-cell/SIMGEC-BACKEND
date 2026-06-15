@@ -1,6 +1,9 @@
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const config = require("../config");
 
-const SECRET = process.env.JWT_SECRET || "change_this_secret";
+const SECRET = config.jwtSecret;
+const JWT_EXPIRES_IN = config.jwtExpiresIn;
 
 function getToken(req) {
   const authHeader = req.headers.authorization;
@@ -69,4 +72,4 @@ function verifyPageToken(req, res, next) {
   }
 }
 
-module.exports = { authenticate, authorize, verifyPageToken, SECRET };
+module.exports = { authenticate, authorize, verifyPageToken, SECRET, JWT_EXPIRES_IN };

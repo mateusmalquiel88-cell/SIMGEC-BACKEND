@@ -38,8 +38,8 @@
   <div class="topbar">
     <div class="flag"><span class="flag-icon">🇦🇴</span><span>SIMGEC - Registar Aluno</span></div>
     <div class="nav">
-      <a class="nav-link" href="/dashboard">Dashboard</a>
-      <a class="nav-link" href="/chat">💬 Chat</a>
+      <a id="registerDashboardLink" class="nav-link" href="/dashboard">Dashboard</a>
+      <a id="registerChatLink" class="nav-link" href="/chat">💬 Chat</a>
       <a class="nav-link" onclick="logout()">Logout</a>
     </div>
   </div>
@@ -95,12 +95,34 @@
   </div>
 
   <script>
-    const token = localStorage.getItem('simgc_token');
-    const userRole = localStorage.getItem('simgc_role');
+    const registerDashboardLink = document.getElementById('registerDashboardLink');
+    const registerChatLink = document.getElementById('registerChatLink');
 
-    if (!token || !['admin', 'operator'].includes(userRole)) {
-      window.location.href = '/dashboard';
+    async function verifySession() {
+      try {
+        const res = await fetch('/auth/verify', { credentials: 'same-origin' });
+        if (!res.ok) {
+          window.location.href = '/';
+          return null;
+        }
+
+        const data = await res.json();
+        if (!data.user || !['admin', 'operator'].includes(data.user.role)) {
+          window.location.href = '/';
+          return null;
+        }
+
+        if (registerDashboardLink) registerDashboardLink.href = '/dashboard';
+        if (registerChatLink) registerChatLink.href = '/chat';
+        return data.user;
+      } catch (err) {
+        console.error('Erro de verificação:', err);
+        window.location.href = '/';
+        return null;
+      }
     }
+
+    verifySession();
 
     const form = document.getElementById('registroForm');
     const messageBox = document.getElementById('messageBox');
@@ -140,10 +162,8 @@
 
         const response = await fetch('/alunos', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ nome, idade, turma })
         });
 
@@ -162,12 +182,15 @@
       }
     });
 
-    function logout() {
-      if (confirm('Tem a certeza que deseja fazer logout?')) {
-        localStorage.removeItem('simgc_token');
-        localStorage.removeItem('simgc_role');
-        window.location.href = '/';
+    async function logout() {
+      if (!confirm('Tem a certeza que deseja fazer logout?')) return;
+      try {
+        await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch (err) {
+        console.warn('Logout fetch failed:', err);
       }
+      document.cookie = 'simgc_token=; path=/; Max-Age=0; SameSite=Lax';
+      window.location.href = '/';
     }
   </script>
 </body>

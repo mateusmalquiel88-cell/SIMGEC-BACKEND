@@ -2,7 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../db");
-const { SECRET, authenticate } = require("../middleware/auth");
+const { SECRET, JWT_EXPIRES_IN, authenticate, authorize } = require("../middleware/auth");
+const config = require("../config");
 
 const router = express.Router();
 const validRoles = ["admin", "director", "operator", "secretaria", "professor", "consulta"];
@@ -11,7 +12,7 @@ router.get("/verify", authenticate, (req, res) => {
   res.json({ valid: true, user: req.user });
 });
 
-router.post("/register", (req, res) => {
+router.post("/register", authenticate, authorize("admin"), (req, res) => {
   const { email, password, role = "operator", escola = "" } = req.body;
 
   if (!email || !password) {
@@ -85,13 +86,36 @@ router.post("/login", (req, res) => {
         { userId: user.id, email: user.email, role: user.role, escola: user.escola || "" },
         SECRET,
         {
-          expiresIn: "8h"
+          expiresIn: JWT_EXPIRES_IN
         }
       );
 
+      // Set HttpOnly cookie for browser-based auth (safer than localStorage)
+      try {
+        res.cookie("simgc_token", token, {
+          httpOnly: true,
+          secure: config.isProduction || false,
+          sameSite: "Lax",
+          path: "/"
+        });
+      } catch (cookieErr) {
+        console.warn('Failed to set cookie:', cookieErr);
+      }
+
+      // Return token for API clients (keeps backward compatibility)
       res.json({ token, role: user.role, escola: user.escola || "" });
     });
   });
 });
 
-module.exports = { router };
+router.post("/logout", authenticate, (req, res) => {
+  res.clearCookie("simgc_token", {
+    httpOnly: true,
+    secure: config.isProduction || false,
+    sameSite: "Lax",
+    path: "/"
+  });
+  res.json({ message: "Logged out successfully" });
+});
+
+module.exports = router;

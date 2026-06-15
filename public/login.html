@@ -34,7 +34,7 @@
   </div>
   <div class="container">
     <h1>Entrar no SIMGEC</h1>
-    <form id="loginForm">
+    <form id="loginForm" action="/auth/login" method="POST">
       <label for="email">Email</label>
       <input type="text" id="email" name="email" value="marotheus.mora" required />
 
@@ -49,13 +49,9 @@
 
   <script>
     async function checkToken() {
-      const token = localStorage.getItem('simgc_token');
-      if (!token) return false;
-
       try {
-        const response = await fetch('/auth/verify', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Rely on HttpOnly cookie; send credentials so cookie is included
+        const response = await fetch('/auth/verify', { credentials: 'same-origin' });
         return response.ok;
       } catch {
         return false;
@@ -68,8 +64,6 @@
         window.location.href = '/dashboard';
         return;
       } else {
-        localStorage.removeItem('simgc_token');
-        localStorage.removeItem('simgc_role');
         document.cookie = 'simgc_token=; path=/; Max-Age=0; SameSite=Lax';
       }
     })();
@@ -94,11 +88,10 @@
           return;
         }
 
-        localStorage.setItem('simgc_token', data.token);
-        localStorage.setItem('simgc_role', data.role || 'operator');
-        document.cookie = `simgc_token=${encodeURIComponent(data.token)}; path=/; SameSite=Lax`;
+        // Server sets HttpOnly cookie and session is now active
         window.location.href = '/dashboard';
       } catch (err) {
+        console.error('Login error:', err);
         errorMessage.textContent = 'Erro no login, tente novamente.';
       }
     });

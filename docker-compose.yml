@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  simgec-backend:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      JWT_SECRET: "change_this_to_a_secure_secret"
+      DATABASE_PATH: /usr/src/app/data/simgec.db
+    volumes:
+      - ./data:/usr/src/app/data
+      - ./logs:/usr/src/app/logs
+    restart: unless-stopped

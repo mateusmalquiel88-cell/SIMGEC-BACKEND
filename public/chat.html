@@ -36,7 +36,7 @@
 <body>
   <div class="topbar">
     <div class="flag"><span class="flag-icon">🇦🇴</span><span>SIMGEC Chat - Assistente Educacional</span></div>
-    <a class="nav-link" href="/dashboard">← Voltar ao Dashboard</a>
+    <a id="chatBackLink" class="nav-link" href="/dashboard">← Voltar ao Dashboard</a>
   </div>
 
   <header>
@@ -57,14 +57,28 @@
   </main>
 
   <script>
-    const token = localStorage.getItem('simgc_token');
     const messagesContainer = document.getElementById('chatMessages');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
+    const chatBackLink = document.getElementById('chatBackLink');
 
-    if (!token) {
-      window.location.href = '/';
+    async function verifySession() {
+      try {
+        const res = await fetch('/auth/verify', { credentials: 'same-origin' });
+        if (!res.ok) {
+          window.location.href = '/';
+          return;
+        }
+        if (chatBackLink) {
+          chatBackLink.href = '/dashboard';
+        }
+      } catch (err) {
+        console.error('Erro de verificação:', err);
+        window.location.href = '/';
+      }
     }
+
+    verifySession();
 
     function addMessage(text, type) {
       const msgEl = document.createElement('div');
@@ -86,12 +100,10 @@
       addMessage('Pensando...', 'loading');
 
       try {
-        const response = await fetch('/chat/message', {
+const response = await fetch('/chat-api/message', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ message })
         });
 
@@ -118,9 +130,10 @@
       if (!confirm('Tem a certeza que deseja apagar o histórico de conversa?')) return;
 
       try {
-        await fetch('/chat/clear', {
+await fetch('/chat-api/clear', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin'
         });
         
         messagesContainer.innerHTML = '<div class="message system">Conversa apagada. Pode começar uma nova! 👋</div>';

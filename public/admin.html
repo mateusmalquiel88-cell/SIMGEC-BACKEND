@@ -68,7 +68,7 @@
       <button class="nav-btn" id="usersTab">Utilizadores</button>
       <button class="nav-btn" id="schoolsTab">Escolas</button>
       <button class="nav-btn" id="auditTab">Auditoria</button>
-      <a class="nav-btn" href="/chat" style="text-decoration: none; cursor: pointer;">💬 Chat</a>
+      <a id="adminChatLink" class="nav-btn" href="/chat" style="text-decoration: none; cursor: pointer;">💬 Chat</a>
       <button class="logout-btn nav-btn" id="logoutBtn">Logout</button>
     </div>
   </div>
@@ -321,25 +321,46 @@
   </main>
 
   <script>
-    const token = localStorage.getItem('simgc_token');
-    const userRole = localStorage.getItem('simgc_role');
+    const adminChatLink = document.getElementById('adminChatLink');
 
-    if (!token || userRole !== 'admin') {
-      window.location.href = '/dashboard';
+    async function verifyAdminSession() {
+      try {
+        const res = await fetch('/auth/verify', { credentials: 'same-origin' });
+        if (!res.ok) {
+          window.location.href = '/';
+          return null;
+        }
+        const data = await res.json();
+        if (!data.user || data.user.role !== 'admin') {
+          window.location.href = '/dashboard';
+          return null;
+        }
+        if (adminChatLink) {
+          adminChatLink.href = '/chat';
+        }
+        return data.user;
+      } catch (err) {
+        console.error('Erro de verificação:', err);
+        window.location.href = '/';
+        return null;
+      }
     }
 
     let classeChart, ageChart;
     let editingSchoolId = null;
 
     async function loadDashboard() {
+      const user = await verifyAdminSession();
+      if (!user) return;
+
       try {
-        const headers = { 'Authorization': `Bearer ${token}` };
+        const headers = { 'Content-Type': 'application/json' };
 
         const [resAnalytics, resUsers, resAlunos, resEscolas] = await Promise.all([
-          fetch('/analytics/summary', { headers }),
-          fetch('/admin-api/users', { headers }),
-          fetch('/alunos', { headers }),
-          fetch('/escolas', { headers })
+          fetch('/analytics/summary', { headers, credentials: 'same-origin' }),
+          fetch('/admin-api/users', { headers, credentials: 'same-origin' }),
+          fetch('/alunos', { headers, credentials: 'same-origin' }),
+          fetch('/escolas', { headers, credentials: 'same-origin' })
         ]);
 
         if (!resAnalytics.ok || !resUsers.ok || !resAlunos.ok || !resEscolas.ok) {
@@ -477,7 +498,7 @@
     async function refreshSchools(queryString, page = 1) {
       currentPage = page;
       try {
-        const headers = { 'Authorization': `Bearer ${token}` };
+        const headers = { 'Content-Type': 'application/json' };
         // combine queryString with pagination and sort
         const params = new URLSearchParams(queryString || '');
         params.set('page', String(currentPage));
@@ -485,7 +506,7 @@
         params.set('sortBy', currentSortBy);
         params.set('sortOrder', currentSortOrder);
         const url = '/escolas?' + params.toString();
-        const res = await fetch(url, { headers });
+        const res = await fetch(url, { headers, credentials: 'same-origin' });
         if (!res.ok) {
           throw new Error('Erro ao carregar escolas');
         }
@@ -574,10 +595,8 @@
       try {
         const response = await fetch('/admin-api/users', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ email, password, role, escola })
         });
 
@@ -622,10 +641,8 @@
       try {
         const response = await fetch(url, {
           method,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({
             codigo,
             nome,
@@ -664,8 +681,8 @@
 
     async function loadAudit() {
       try {
-        const headers = { 'Authorization': `Bearer ${token}` };
-        const res = await fetch('/admin-api/audit', { headers });
+        const headers = { 'Content-Type': 'application/json' };
+        const res = await fetch('/admin-api/audit', { headers, credentials: 'same-origin' });
         if (!res.ok) return;
         
         const audits = await res.json();
@@ -693,7 +710,8 @@
       try {
         const response = await fetch(`/admin-api/users/${id}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin'
         });
         if (!response.ok) {
           const data = await response.json();
@@ -737,7 +755,8 @@
       try {
         const response = await fetch(`/escolas/${id}`, {
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin'
         });
         if (!response.ok) {
           const data = await response.json();
@@ -784,9 +803,13 @@
       loadAudit();
     });
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('simgc_token');
-      localStorage.removeItem('simgc_role');
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' });
+      } catch (err) {
+        console.warn('Logout fetch failed:', err);
+      }
+      document.cookie = 'simgc_token=; path=/; Max-Age=0; SameSite=Lax';
       window.location.href = '/';
     });
 

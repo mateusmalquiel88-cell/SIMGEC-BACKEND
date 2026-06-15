@@ -125,9 +125,7 @@
     }
 
     function goHome() {
-      // Tentar voltar para dashboard ou login
-      const token = localStorage.getItem('simgc_token');
-      window.location.href = token ? '/dashboard' : '/';
+      window.location.href = '/dashboard';
     }
 
     // Monitorizar conexão

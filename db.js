@@ -1,8 +1,16 @@
+const fs = require("fs");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const bcrypt = require("bcryptjs");
+const config = require("./config");
 
-const dbPath = path.join(__dirname, "simgec.db");
+const dbPath = config.databasePath;
+
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error("Erro ao abrir a base de dados SQLite:", err);
