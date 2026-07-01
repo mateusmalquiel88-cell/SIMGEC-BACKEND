@@ -35,6 +35,33 @@ const alunoSchema = Joi.object({
   })
 });
 
+const alunoUpdateSchema = Joi.object({
+  nome: Joi.string().min(3).max(100).messages({
+    "string.base": '"nome" deve ser um texto',
+    "string.empty": '"nome" não pode estar vazio',
+    "string.min": '"nome" length must be at least 3 characters long',
+    "string.max": '"nome" length must be at most 100 characters long'
+  }),
+  idade: Joi.number().integer().min(5).max(100).messages({
+    "number.base": '"idade" deve ser um número',
+    "number.integer": '"idade" deve ser um inteiro',
+    "number.min": '"idade" must be at least 5',
+    "number.max": '"idade" must be at most 100'
+  }),
+  turma: Joi.string().min(2).max(20).messages({
+    "string.base": '"turma" deve ser um texto',
+    "string.empty": '"turma" não pode estar vazia',
+    "string.min": '"turma" length must be at least 2 characters long',
+    "string.max": '"turma" length must be at most 20 characters long'
+  }),
+  escola: Joi.string().min(2).max(100).messages({
+    "string.base": '"escola" deve ser um texto',
+    "string.empty": '"escola" não pode estar vazia',
+    "string.min": '"escola" length must be at least 2 characters long',
+    "string.max": '"escola" length must be at most 100 characters long'
+  })
+}).min(1);
+
 function getSchoolFilter(req) {
   if (req.user.role === "admin") {
     return { where: "", params: [] };
@@ -163,6 +190,24 @@ function validarAluno(req, res, next) {
   next();
 }
 
+function validarAlunoUpdate(req, res, next) {
+  console.log("🔥 VALIDANDO PATCH ALUNO...");
+
+  const { error } = alunoUpdateSchema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: false
+  });
+
+  if (error) {
+    const messages = error.details.map(detail => detail.message);
+    console.log("❌ Erro de validação (patch):", messages);
+    return res.status(400).json({ message: messages.join('; ') });
+  }
+
+  console.log("✅ Validação PATCH OK");
+  next();
+}
+
 function validarId(req, res, next) {
   const id = Number(req.params.id);
 
@@ -275,6 +320,62 @@ router.put("/:id", authenticate, authorize(["admin", "director"]), validarId, va
       });
     }
   );
+});
+
+router.patch("/:id", authenticate, authorize(["admin", "director"]), validarId, validarAlunoUpdate, (req, res) => {
+  const { nome, idade, turma, escola } = req.body;
+
+  if (req.user.role !== "admin" && escola !== undefined) {
+    return res.status(403).json({ message: "Apenas admin pode alterar a escola do aluno" });
+  }
+
+  const fields = [];
+  const params = [];
+
+  if (nome !== undefined) { fields.push("nome = ?"); params.push(nome); }
+  if (idade !== undefined) { fields.push("idade = ?"); params.push(idade); }
+  if (turma !== undefined) { fields.push("turma = ?"); params.push(turma); }
+  if (escola !== undefined && req.user.role === "admin") { fields.push("escola = ?"); params.push(escola); }
+
+  if (fields.length === 0) {
+    return res.status(400).json({ message: "Nenhum campo para atualizar" });
+  }
+
+  const schoolClause = req.user.role === "admin" ? "" : " AND escola = ?";
+  if (req.user.role !== "admin") {
+    // garantir que atualizamos apenas dentro da escola do usuário
+    params.push(req.user.escola);
+  }
+
+  params.push(req.alunoId);
+
+  const sql = `UPDATE alunos SET ${fields.join(', ')} WHERE id = ?${schoolClause}`;
+
+  db.run(sql, params, function (err) {
+    if (err) {
+      console.error("Erro a atualizar (patch) aluno:", err);
+      return res.status(500).json({ message: "Erro a atualizar aluno" });
+    }
+
+    if (this.changes === 0) {
+      return res.status(404).json({ message: "Aluno não encontrado" });
+    }
+
+    const resultFilter = getSchoolIdFilter(req);
+    db.get(resultFilter.sql, resultFilter.params, (getErr, row) => {
+      if (getErr) {
+        console.error("Erro a buscar aluno atualizado:", getErr);
+        return res.status(500).json({ message: "Erro a ler aluno" });
+      }
+
+      events.emit("alunos", { action: "patched", aluno: row });
+
+      res.json({
+        message: "Aluno atualizado parcialmente com sucesso",
+        aluno: row
+      });
+    });
+  });
 });
 
 router.delete("/:id", authenticate, authorize(["admin", "director"]), validarId, (req, res) => {
