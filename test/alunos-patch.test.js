@@ -88,4 +88,36 @@ describe('Alunos PATCH endpoint', function () {
     expect(res.body).to.have.property('aluno');
     expect(res.body.aluno).to.include({ nome: 'Aluno Atualizado' });
   });
+
+  it('should prevent director from changing escola via PATCH', async () => {
+    const directorEmail = 'director.patch@test.com';
+    const directorPassword = 'Director123!';
+
+    const registerRes = await request(app)
+      .post('/auth/register')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        email: directorEmail,
+        password: directorPassword,
+        role: 'director',
+        escola: 'Escola Patch'
+      })
+      .expect(201);
+
+    expect(registerRes.body).to.have.property('message', 'Usuário criado com sucesso');
+
+    const loginRes = await request(app)
+      .post('/auth/login')
+      .send({ email: directorEmail, password: directorPassword })
+      .expect(200);
+
+    const directorToken = loginRes.body.token;
+    expect(directorToken).to.be.a('string');
+
+    await request(app)
+      .patch(`/alunos/${createdAlunoId}`)
+      .set('Authorization', `Bearer ${directorToken}`)
+      .send({ escola: 'Escola Inválida' })
+      .expect(403);
+  });
 });

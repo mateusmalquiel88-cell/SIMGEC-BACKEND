@@ -342,12 +342,11 @@ router.patch("/:id", authenticate, authorize(["admin", "director"]), validarId, 
   }
 
   const schoolClause = req.user.role === "admin" ? "" : " AND escola = ?";
+  params.push(req.alunoId);
   if (req.user.role !== "admin") {
     // garantir que atualizamos apenas dentro da escola do usuário
     params.push(req.user.escola);
   }
-
-  params.push(req.alunoId);
 
   const sql = `UPDATE alunos SET ${fields.join(', ')} WHERE id = ?${schoolClause}`;
 

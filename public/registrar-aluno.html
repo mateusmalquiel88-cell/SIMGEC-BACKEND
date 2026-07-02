@@ -5,33 +5,53 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SIMGEC - Registar Aluno</title>
+  <meta name="theme-color" content="#0d6efd" />
   <style>
+    :root {
+      --primary: #0d6efd;
+      --secondary: #00c4a7;
+      --background: #071029;
+      --surface: #0f1724;
+      --text: #e6f0ff;
+      --muted: #9fb7d9;
+      --border: rgba(13, 110, 253, 0.25);
+      --shadow: 0 24px 60px rgba(0,0,0,0.28);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #000; color: #b8ff6c; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: linear-gradient(90deg, #d60000 0%, #d60000 40%, #000 40%, #000 100%); border-bottom: 1px solid #00ff66; }
-    .flag { display: flex; align-items: center; gap: 10px; font-weight: bold; }
-    .flag-icon { font-size: 1.5rem; }
-    .nav { display: flex; gap: 12px; }
-    .nav-link { color: #00ff66; text-decoration: none; padding: 8px 14px; border: 1px solid #00ff66; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
-    .nav-link:hover { background: #00ff66; color: #000; }
-    .container { max-width: 600px; margin: 40px auto; padding: 24px; background: rgba(0, 0, 0, 0.88); border: 1px solid #00ff66; border-radius: 16px; box-shadow: 0 0 40px rgba(0, 255, 102, 0.33); }
-    h1 { color: #b8ff6c; text-shadow: 0 0 16px rgba(184, 255, 108, 0.6); margin-bottom: 24px; }
-    .form-group { margin-bottom: 16px; }
-    label { display: block; font-weight: 600; color: #d4ff9e; margin-bottom: 6px; }
-    input, select { width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #00ff66; background: rgba(0, 0, 0, 0.75); color: #d4ff9e; }
-    input:focus, select:focus { outline: none; box-shadow: 0 0 18px rgba(0, 255, 102, 0.5); border-color: #92ff74; }
-    .button-group { display: flex; gap: 12px; margin-top: 24px; }
-    button { flex: 1; padding: 12px 16px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
-    .submit-btn { background: #00ff66; color: #000; font-weight: bold; }
-    .submit-btn:hover { background: #9aff92; }
-    .cancel-btn { background: transparent; border: 1px solid #00ff66; color: #00ff66; }
-    .cancel-btn:hover { background: #00ff66; color: #000; }
-    .message { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; }
-    .success { background: rgba(0, 255, 102, 0.2); border: 1px solid #00ff66; color: #b8ff6c; }
-    .error { background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; color: #ff9999; }
-    .info { background: rgba(100, 200, 255, 0.2); border: 1px solid #64c8ff; color: #96d4ff; }
-    .form-hint { font-size: 0.9rem; color: #8fff88; margin-top: 4px; }
-    .validation-error { color: #ff6b6b; font-size: 0.9rem; margin-top: 4px; }
+    body { font-family: Arial, sans-serif; background: var(--background); color: var(--text); }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(90deg, var(--primary) 0%, rgba(13, 110, 253, 0.92) 40%, rgba(13, 110, 253, 0.14) 100%);
+      border-bottom: 1px solid rgba(13, 110, 253, 0.25);
+    }
+    .flag { display:flex; align-items:center; gap:10px; font-weight:bold; }
+    .flag-icon { font-size:1.5rem; }
+    .nav { display:flex; gap:12px; }
+    .nav-link { color: var(--secondary); text-decoration:none; padding:8px 14px; border:1px solid var(--secondary); border-radius: 10px; cursor:pointer; transition: all 0.2s ease; }
+    .nav-link:hover { background: var(--secondary); color: var(--background); }
+    .container { max-width: 650px; margin: 36px auto; padding: 28px; background: var(--surface); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; box-shadow: var(--shadow); }
+    h1 { color: var(--text); text-shadow: 0 0 16px rgba(13, 110, 253, 0.24); margin-bottom: 24px; }
+    .form-group { margin-bottom: 18px; }
+    label { display:block; font-weight:600; color: var(--muted); margin-bottom:6px; }
+    input, select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); color: var(--text); }
+    input:focus, select:focus { outline:none; box-shadow: 0 0 18px rgba(13,110,253,0.25); border-color: var(--primary); }
+    .button-group { display:flex; flex-wrap:wrap; gap:12px; margin-top:24px; }
+    button { flex:1; min-width: 148px; padding: 12px 16px; border:none; border-radius: 12px; font-size:1rem; cursor:pointer; transition: all 0.2s ease; }
+    .submit-btn { background: var(--secondary); color: var(--background); font-weight:700; }
+    .submit-btn:hover { background: #1bcaa8; }
+    .cancel-btn { background: transparent; border: 1px solid var(--secondary); color: var(--secondary); }
+    .cancel-btn:hover { background: var(--secondary); color: var(--background); }
+    .message { padding: 14px 16px; border-radius: 12px; margin-bottom: 16px; }
+    .success { background: rgba(0, 192, 167, 0.16); border: 1px solid #00c4a7; color: #d3fff6; }
+    .error { background: rgba(255, 107, 107, 0.18); border: 1px solid #ff6b6b; color: #ffb3b3; }
+    .info { background: rgba(13, 110, 253, 0.12); border: 1px solid rgba(13, 110, 253, 0.35); color: #cfe3ff; }
+    .form-hint { font-size: 0.9rem; color: #9fb7d9; margin-top: 4px; }
+    .validation-error { color: #ff8b8b; font-size: 0.9rem; margin-top: 4px; }
+    @media (max-width: 720px) { .button-group { flex-direction: column; } }
   </style>
 </head>
 <body>

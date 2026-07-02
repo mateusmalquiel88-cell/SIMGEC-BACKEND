@@ -12,33 +12,108 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23d60000' width='192' height='192'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='80' font-weight='bold' fill='%23b8ff6c' font-family='Arial'>S</text></svg>" />
   <title>SIMGEC Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <meta name="theme-color" content="#0d6efd" />
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #000; color: #b8ff6c; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; background: linear-gradient(90deg, #d60000 0%, #d60000 40%, #000 40%, #000 100%); color: white; border-bottom: 1px solid #00ff66; }
+    :root {
+      --primary: #0d6efd;
+      --secondary: #00c4a7;
+      --accent: #ffb020;
+      --background: #071029;
+      --surface: #0f1724;
+      --text: #e6f0ff;
+      --muted: #9fb7d9;
+      --border: rgba(13, 110, 253, 0.25);
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: var(--text);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: linear-gradient(90deg, var(--primary) 0%, rgba(13, 110, 253, 0.85) 45%, rgba(13, 110, 253, 0.24) 100%);
+      color: white;
+      border-bottom: 1px solid rgba(13, 110, 253, 0.35);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    }
+
     .flag { display: flex; align-items: center; gap: 10px; font-weight: bold; }
     .flag-icon { font-size: 1.5rem; }
     .nav-container { display: flex; gap: 12px; align-items: center; }
-    .nav-link { background: transparent; border: 1px solid #00ff66; color: #00ff66; padding: 8px 14px; border-radius: 6px; cursor: pointer; text-decoration: none; transition: all 0.2s; font-size: 0.9rem; }
-    .nav-link:hover { background: #00ff66; color: #000; }
+    .nav-link {
+      background: transparent;
+      border: 1px solid var(--secondary);
+      color: var(--secondary);
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+    }
+    .nav-link:hover { background: var(--secondary); color: var(--background); }
+
     header { padding: 24px 24px 12px; }
-    h1 { margin: 0; color: #b8ff6c; text-shadow: 0 0 24px rgba(184,255,108,0.5); }
+    h1 { margin: 0; color: var(--text); text-shadow: 0 0 16px rgba(13, 110, 253, 0.28); }
     main { padding: 16px 24px 32px; }
-    .card { background: rgba(0,0,0,0.8); border: 1px solid #00ff66; border-radius: 16px; box-shadow: 0 0 30px rgba(0,255,102,0.2); margin-bottom: 16px; padding: 20px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+      padding: 24px;
+    }
+
     .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-    .stat { background: rgba(0,255,102,0.1); border: 1px solid #00ff66; padding: 20px; border-radius: 12px; text-align: center; }
-    .stat-value { font-size: 2.5rem; font-weight: bold; color: #00ff66; }
-    .stat-label { color: #8fff88; margin-top: 8px; font-size: 0.95rem; }
+    .stat {
+      background: rgba(13, 110, 253, 0.08);
+      border: 1px solid rgba(13, 110, 253, 0.18);
+      padding: 20px;
+      border-radius: 16px;
+      text-align: center;
+    }
+    .stat-value { font-size: 2.5rem; font-weight: bold; color: var(--primary); }
+    .stat-label { color: var(--muted); margin-top: 8px; font-size: 0.95rem; }
+
     .table { width: 100%; border-collapse: collapse; }
-    .table th, .table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(0,255,102,0.2); }
-    .table th { color: #d4ff9e; background: rgba(0,255,102,0.05); }
-    .table td { color: #f5f9df; }
+    .table th, .table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .table th { color: var(--text); background: rgba(13, 110, 253, 0.08); }
+    .table td { color: #dbe5ff; }
+
     .status { display: inline-flex; align-items: center; gap: 8px; }
-    .badge { padding: 4px 10px; border-radius: 999px; background: #00ff66; color: #000; font-size: 0.78rem; }
-    .error { color: #ff6b6b; }
+    .badge { padding: 5px 12px; border-radius: 999px; background: var(--primary); color: #fff; font-size: 0.78rem; }
+    .error { color: #ff8b8b; }
     .chart-container { position: relative; height: 300px; margin-top: 16px; margin-bottom: 16px; }
-    .btn-group { display: flex; gap: 12px; }
-    .btn { background: #00ff66; color: #000; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
-    .btn:hover { background: #9aff92; }
+
+    .btn-group { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      background: var(--secondary);
+      color: var(--background);
+      border: none;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 28px rgba(13, 110, 253, 0.18);
+    }
+
+    @media (max-width: 720px) {
+      .btn-group { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
